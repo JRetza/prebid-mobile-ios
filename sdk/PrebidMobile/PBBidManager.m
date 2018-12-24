@@ -169,11 +169,12 @@ static dispatch_once_t onceToken;
     }
     if ([self isBidReady:adUnitIdentifier]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            PBLogDebug(@"Calling completionHandler on attachTopBidWhenReady");
+            PBLogDebug(@"Calling completionHandler on attachTopBidWhenReady isBidReady");
             handler();
         });
     } else {
         timeoutInMS = timeoutInMS - kPCAttachTopBidTimeoutIntervalMS;
+        NSLog(@"calling attachTopBidHelperForAdUnitId %d", timeoutInMS );
         if (timeoutInMS > 0) {
             dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC * kPCAttachTopBidTimeoutIntervalMS);
             dispatch_after(delay, dispatch_get_main_queue(), ^(void) {
@@ -183,7 +184,7 @@ static dispatch_once_t onceToken;
             });
         } else {
             PBLogDebug(@"Attempting to attach cached bid for ad unit %@", adUnitIdentifier);
-            PBLogDebug(@"Calling completionHandler on attachTopBidWhenReady");
+            PBLogDebug(@"Calling completionHandler on attachTopBidWhenReady bids not ready");
             handler();
         }
     }
@@ -226,11 +227,13 @@ static dispatch_once_t onceToken;
 - (void)resetAdUnit:(PBAdUnit *)adUnit {
     [adUnit generateUUID];
     [_bidsMap removeObjectForKey:adUnit.identifier];
+    NSLog(@"reset _bidsMap");
 }
 
 - (void)saveBidResponses:(NSArray <PBBidResponse *> *)bidResponses {
     if ([bidResponses count] > 0) {
         PBBidResponse *bid = (PBBidResponse *)bidResponses[0];
+        NSLog(@"set _bidsMap");
         [_bidsMap setObject:[bidResponses mutableCopy] forKey:bid.adUnitId];
 
         // TODO: if prebid server returns expiry time for bids we need to change this implementation

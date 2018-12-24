@@ -19,7 +19,7 @@
 @class PBBidResponse;
 
 static int const kPCAttachTopBidTimeoutIntervalMS = 50;
-static int const kPCAttachTopBidMaxTimeoutMS = 1500;
+static int const kPCAttachTopBidMaxTimeoutMS = 30000;
 
 @interface PBBidManager : NSObject
 
