@@ -60,7 +60,7 @@
                                    //NSDictionary *adUnitToBids = [self processData:data];
                                    NSDictionary *openRTBAdUnitBidMap = [self processOpenRTBData:data];
                                    dispatch_async(dispatch_get_main_queue(), ^{
-                                       completionHandler(openRTBAdUnitBidMap, nil);
+                                        completionHandler(openRTBAdUnitBidMap, nil);
                                    });
                                } else {
                                    dispatch_async(dispatch_get_main_queue(), ^{

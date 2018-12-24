@@ -32,11 +32,23 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wundeclared-selector"
             if(NSClassFromString(@"GADSlot")==nil){
+                 NSLog(@"swizzle gado");
                 [NSClassFromString(@"GADOSlot") pb_swizzleInstanceSelector:@selector(requestParameters)
                                                          withSelector:@selector(pb_requestParameters)];
+ 
+                /*[NSClassFromString(@"DFPBannerView") pb_swizzleInstanceSelector:@selector(loadRequest)
+                                                             withSelector:@selector(pb_loadRequest)];*/
+                
+                
             }else {
                 [NSClassFromString(@"GADSlot") pb_swizzleInstanceSelector:@selector(requestParameters)
                                                              withSelector:@selector(pb_requestParameters)];
+                if(NSClassFromString(@"GADSlot")==nil){
+                    NSLog(@"gad doesn't exist");
+                }
+                if(NSClassFromString(@"GADOSlot")==nil){
+                    NSLog(@"gado doesn't exist");
+                }
             }
             [NSClassFromString(@"MPBannerAdManager") pb_swizzleInstanceSelector:@selector(loadAd)
                                                                    withSelector:@selector(pb_loadAd)];
@@ -68,13 +80,27 @@
                             method_getImplementation(originalMethod),
                             method_getTypeEncoding(originalMethod));
     } else {
+        
+        //struct objc_method_description* xx= method_getDescription(originalMethod);
+        //int xy = method_getNumberOfArguments(originalMethod);
         method_exchangeImplementations(originalMethod, swizzledMethod);
+        //IMP impl = method_setImplementation(originalMethod, method_getImplementation(swizzledMethod));
+        
+        
+         //Method originalMethod2 = class_getInstanceMethod(class, swizzledSelector);
+        //if(originalMethod2){
+         //   NSLog(@"dsfs");
+        //}
     }
 }
 
 // dfp ad slot
+
+
 - (id)pb_requestParameters {
+    NSLog(@"keywords 1");
     __block id requestParameters = [self pb_requestParameters];
+    
 
     SEL adEventDelegateSel = NSSelectorFromString(@"adEventDelegate");
     if ([self respondsToSelector:adEventDelegateSel]) {
@@ -91,6 +117,7 @@
             if (adUnit) {
                 keywordsPairs = [[PBBidManager sharedInstance] keywordsForWinningBidForAdUnit:adUnit];
                 requestParameters = [[PBBidManager sharedInstance] addPrebidParameters:requestParameters withKeywords:keywordsPairs];
+                NSLog(@"keywords 2");
             }
         }
     }
