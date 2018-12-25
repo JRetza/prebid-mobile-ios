@@ -71,7 +71,7 @@ static NSString *const kPrebidMobileVersion = @"0.5.2";
     requestDict[@"imp"] = [self openrtbImpsFromAdUnits:adUnits withSecureSettings:isSecure];
     requestDict[@"ext"] = [self openrtbRequestExtension:accountID];
     
-    //requestDict[@"test"] = 1;
+    requestDict[@"test"] = @(1);
     // requestDict[@"randomkey"] = @"234124123";
     
     return [requestDict copy];
