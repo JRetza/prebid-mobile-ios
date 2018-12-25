@@ -56,5 +56,19 @@
 + (void) shouldLoadOverSecureConnection:(BOOL) secureConnection {
     [[PBBidManager sharedInstance] loadOnSecureConnection:secureConnection];
 }
++ (void) adUnitReceivedDefault: (UIView *)adView {
+    [[PBBidManager sharedInstance] adUnitReceivedDefault:adView];
+}
++ (void) adUnitReceivedAppEvent: (UIView *)adView
+                andWithInstuction:(NSString*)instrunction
+               andWithParameter:(NSString*)prm{
+    [[PBBidManager sharedInstance] adUnitReceivedAppEvent:adView
+                                        andWithInstuction:instrunction
+                                         andWithParameter:prm];
+}
+
++ (void) gatherStats{
+    [[PBBidManager sharedInstance] gatherStats];
+}
 
 @end

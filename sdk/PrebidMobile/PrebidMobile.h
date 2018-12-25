@@ -49,5 +49,11 @@
                completionHandler:(nullable void (^)(void))handler;
 
 + (void) shouldLoadOverSecureConnection:(BOOL) secureConnection;
++ (void) adUnitReceivedDefault: (UIView *)adView;
++ (void) adUnitReceivedAppEvent: (UIView *)adView
+              andWithInstuction:(NSString*)instrunction
+               andWithParameter:(NSString*)prm;
+
++ (void) gatherStats;
 
 @end

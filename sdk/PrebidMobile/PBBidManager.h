@@ -80,4 +80,12 @@ typedef NS_ENUM(NSInteger, PBPrimaryAdServerType) {
 
 -(void) loadOnSecureConnection:(BOOL) secureConnection;
 
+- (void) adUnitReceivedDefault:(UIView *)adView;
+- (void) adUnitReceivedAppEvent: (UIView *)adView
+              andWithInstuction:(NSString*)instrunction
+               andWithParameter:(NSString*)prm;
+
+
+- (void) gatherStats;
+
 @end

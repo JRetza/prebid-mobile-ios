@@ -11,7 +11,7 @@
   [super viewDidLoad];
 
   // Replace this ad unit ID with your own ad unit ID.
-  //self.bannerView.adUnitID = @"/6499/example/banner";
+    //self.bannerView.adUnitID = @"/6499/example/banner";
     self.bannerView.adUnitID = @"/2172982/mobile-sdk";
     self.bannerView.rootViewController = self;
     self.bannerView.validAdSizes = @[NSValueFromGADAdSize(kGADAdSizeMediumRectangle)];
@@ -29,12 +29,20 @@
 /// Tells the delegate an ad request loaded an ad.
 - (void)adViewDidReceiveAd:(DFPBannerView *)adView {
     NSLog(@"adViewDidReceiveAd");
+    
+    self.bannerView.backgroundColor = UIColor.whiteColor;
+    
+    [PrebidMobile gatherStats]; //TODO: find good location for this
+    
 }
 
 /// Tells the delegate an ad request failed.
 - (void)adView:(DFPBannerView *)adView
 didFailToReceiveAdWithError:(GADRequestError *)error {
     NSLog(@"adView:didFailToReceiveAdWithError: %@", [error localizedDescription]);
+    if(error.code == kGADErrorNoFill){
+        [PrebidMobile adUnitReceivedDefault:(UIView*) adView];
+    }
 }
 
 /// Tells the delegate that a full-screen view will be presented in response
@@ -62,8 +70,8 @@ didFailToReceiveAdWithError:(GADRequestError *)error {
 - (void)adView:(DFPBannerView *)banner
     didReceiveAppEvent:(NSString *)name
     withInfo:(NSString *)info {
-NSLog(@"received banner event ");
-
+    NSLog(@"received banner event ");
+    [PrebidMobile adUnitReceivedAppEvent:banner andWithInstuction:name andWithParameter:info];
 }
 
 @end
