@@ -98,7 +98,7 @@ static dispatch_once_t onceToken;
     for (id adUnit in adUnits) {
         [self registerAdUnit:adUnit];
     }
-    [self startPollingBidsExpiryTimer];
+    //[self startPollingBidsExpiryTimer]; //Disable automatic pulling for new Bids
     [self requestBidsForAdUnits:adUnits];
 }
 
