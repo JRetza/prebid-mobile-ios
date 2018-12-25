@@ -13,9 +13,9 @@
   // Replace this ad unit ID with your own ad unit ID.
   //self.bannerView.adUnitID = @"/6499/example/banner";
     self.bannerView.adUnitID = @"/2172982/mobile-sdk";
-  self.bannerView.rootViewController = self;
+    self.bannerView.rootViewController = self;
     self.bannerView.validAdSizes = @[NSValueFromGADAdSize(kGADAdSizeMediumRectangle)];
-        self.bannerView.delegate = self;
+    self.bannerView.delegate = self;
     self.bannerView.appEventDelegate = self;
   
     [PrebidMobile setBidKeywordsOnAdObject:self.bannerView withAdUnitId:@"test-imp-id" withTimeout:1000 completionHandler:^{
