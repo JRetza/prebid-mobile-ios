@@ -89,6 +89,7 @@ static int const kBatchCount = 10;
         NSURLRequest *request = [[PBServerRequestBuilder sharedInstance] buildRequest:subAdUnitArray withAccountId:self.accountId withSecureParams:self.isSecure];
         
         [[PBServerFetcher sharedInstance] makeBidRequest:request withCompletionHandler:^(NSDictionary *adUnitToBidsMap, NSError *error) {
+            NSLog(@"completionHandler done making bid requests");
             if (error) {
                 [delegate didCompleteWithError:error];
                 return;
@@ -128,8 +129,8 @@ static int const kBatchCount = 10;
                         [delegate didReceiveSuccessResponse:bidResponsesArray];
                     }
                 } else {
+                    NSLog(@"start cache");
                     [[PrebidCache globalCache] cacheContents:contentsToCache forAdserver:self.primaryAdServer withCompletionBlock:^(NSError * error, NSArray *cacheIds) {
-                        
                         if(!error) {
                             for (int i = 0; i< bidsArray.count; i++) {
                                 NSMutableDictionary *adServerTargetingCopy = [bidsArray[i][@"ext"][@"prebid"][@"targeting"] mutableCopy];
