@@ -159,9 +159,15 @@ static dispatch_once_t onceToken;
     }
     return requestParameters;
 }
+- (void)attachTopBidHelperForAdUnitId:(nonnull NSString *)adUnitIdentifier
+                           andTimeout:(int)timeoutInMS
+                    completionHandler:(nullable void (^)(void))handler {
+    [self attachTopBidHelperForAdUnitId:adUnitIdentifier andTimeout:timeoutInMS andStartTime: (long long)([[NSDate date] timeIntervalSince1970] * 1000.0) completionHandler:handler];
+}
 
 - (void)attachTopBidHelperForAdUnitId:(nonnull NSString *)adUnitIdentifier
                            andTimeout:(int)timeoutInMS
+                         andStartTime:(long long)startInMS
                     completionHandler:(nullable void (^)(void))handler {
     [self assertAdUnitRegistered:adUnitIdentifier];
     if (timeoutInMS > kPCAttachTopBidMaxTimeoutMS) {
@@ -173,13 +179,16 @@ static dispatch_once_t onceToken;
             handler();
         });
     } else {
-        timeoutInMS = timeoutInMS - kPCAttachTopBidTimeoutIntervalMS;
-        NSLog(@"calling attachTopBidHelperForAdUnitId %d", timeoutInMS );
-        if (timeoutInMS > 0) {
+        //timeoutInMS = timeoutInMS - kPCAttachTopBidTimeoutIntervalMS;
+        long long currTime = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+        NSLog(@"calling attachTopBidHelperForAdUnitId %d %d", timeoutInMS,currTime - startInMS);
+        //if (timeoutInMS > 0) {
+        if(currTime - startInMS<timeoutInMS){
             dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC * kPCAttachTopBidTimeoutIntervalMS);
             dispatch_after(delay, dispatch_get_main_queue(), ^(void) {
                 [self attachTopBidHelperForAdUnitId:adUnitIdentifier
                                          andTimeout:timeoutInMS
+                                       andStartTime:startInMS
                                   completionHandler:handler];
             });
         } else {
