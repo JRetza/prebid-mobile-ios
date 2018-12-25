@@ -5,7 +5,7 @@
 @class DFPBannerView;
 @import GoogleMobileAds;
 
-@interface ViewController : UIViewController <GADAppEventDelegate>
+@interface ViewController : UIViewController <GADAppEventDelegate,GADBannerViewDelegate>
 
 
 /// The DFP banner view.
