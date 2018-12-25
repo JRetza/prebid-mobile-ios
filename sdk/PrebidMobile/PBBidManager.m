@@ -394,4 +394,72 @@ static dispatch_once_t onceToken;
     }
 }
 
+- (void)trackStats:(const char *)statsChr{
+    NSMutableURLRequest *mutableRequest = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:@"https://tagmans3.adsolutions.com/log/"]
+                                                                       cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+                                                                   timeoutInterval:1000];
+    [mutableRequest setHTTPMethod:@"POST"];
+    NSData* statsData = [NSData dataWithBytes:statsChr length:strlen(statsChr)];
+    [mutableRequest setHTTPBody:statsData];
+    
+    
+    [NSURLConnection sendAsynchronousRequest:mutableRequest
+                                       queue:[[NSOperationQueue alloc] init]
+                           completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
+                               NSLog(@"tracked stats");
+                           }];
+    
+}
+
+
+
+- (void) gatherStats{
+#define QUOTE(...) #__VA_ARGS__
+    const char *postJSON = QUOTE(
+                                 {
+                                     "client": 0,
+                                     "screenWidth": 0,
+                                     "screenHeight": 0,
+                                     "viewWidth": 0,
+                                     "viewHeight": 0,
+                                     "language": "nl",
+                                     "host": "demoAppI",
+                                     "page": "/home",
+                                     "proto": "https:",
+                                     "timeToLoad": 0,
+                                     "timeToPlacement": 0,
+                                     "duration": 0,
+                                     "placements": [
+                                                    {
+                                                        "sizes": [
+                                                                  {
+                                                                      "id": 0,
+                                                                      "isDefault": false,
+                                                                      "viaAdserver": true,
+                                                                      "active": true,
+                                                                      "prebid": {
+                                                                          "tiers": [
+                                                                                    {
+                                                                                        "id": 0,
+                                                                                        "bids": [
+                                                                                                 {
+                                                                                                     "bidder": "appnexus",
+                                                                                                     "won": true,
+                                                                                                     "cpm": 25,
+                                                                                                     "time": 10,
+                                                                                                     "size": "320x50",
+                                                                                                     "state": 1
+                                                                                                 }
+                                                                                                 ]
+                                                                                    }
+                                                                                    ]
+                                                                      }
+                                                                  }
+                                                                  ]
+                                                    }
+                                                    ]
+                                 }
+                                  );
+    [self trackStats:postJSON];
+}
 @end

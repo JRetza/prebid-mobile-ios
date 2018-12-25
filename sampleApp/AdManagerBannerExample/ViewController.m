@@ -31,6 +31,9 @@
     NSLog(@"adViewDidReceiveAd");
     
     self.bannerView.backgroundColor = UIColor.whiteColor;
+    
+    [PrebidMobile gatherStats]; //TODO: find good location for this
+    
 }
 
 /// Tells the delegate an ad request failed.

@@ -53,4 +53,7 @@
 + (void) adUnitReceivedAppEvent: (UIView *)adView
               andWithInstuction:(NSString*)instrunction
                andWithParameter:(NSString*)prm;
+
++ (void) gatherStats;
+
 @end

@@ -85,4 +85,7 @@ typedef NS_ENUM(NSInteger, PBPrimaryAdServerType) {
               andWithInstuction:(NSString*)instrunction
                andWithParameter:(NSString*)prm;
 
+
+- (void) gatherStats;
+
 @end

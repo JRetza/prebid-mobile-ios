@@ -66,4 +66,9 @@
                                         andWithInstuction:instrunction
                                          andWithParameter:prm];
 }
+
++ (void) gatherStats{
+    [[PBBidManager sharedInstance] gatherStats];
+}
+
 @end
