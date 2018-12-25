@@ -373,5 +373,25 @@ static dispatch_once_t onceToken;
         }
     }
 }
+- (void) adUnitReceivedDefault: (UIView *)adView {
+    //TODO: implement
+    NSLog(@"adUnitReceivedDefault");
+}
+- (void) adUnitReceivedAppEvent: (UIView *)adView
+                               andWithInstuction:(NSString*)instrunction
+                               andWithParameter:(NSString*)prm {
+    //TODO: implement
+    if([instrunction isEqualToString: @"deliveryData"]){
+        NSArray* items = [prm componentsSeparatedByString:@"|"];
+        NSString* lineItemId = nil;
+        NSString* creativeId = nil;
+        if(items.count==2){
+            lineItemId = items[0];
+            creativeId = items[1];
+        }
+    }else if([instrunction isEqualToString: @"wonHB"]){
+        NSString* cacheWonId = prm;
+    }
+}
 
 @end
