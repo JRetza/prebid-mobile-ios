@@ -29,6 +29,8 @@
 /// Tells the delegate an ad request loaded an ad.
 - (void)adViewDidReceiveAd:(DFPBannerView *)adView {
     NSLog(@"adViewDidReceiveAd");
+    
+    self.bannerView.backgroundColor = UIColor.whiteColor;
 }
 
 /// Tells the delegate an ad request failed.
