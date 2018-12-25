@@ -39,13 +39,12 @@
                                     GADInterstitialDelegate,
                                     SDKValidationURLProtocolDelegate>
 @property (nonatomic, readwrite) CLLocationManager *locationManager;
-@property DFPBannerView *dfpAdView;
-@property DFPInterstitial *dfpInterstitial;
 @property Boolean initialPrebidServerRequestReceived;
 @property Boolean initialPrebidServerResponseReceived;
 @property Boolean bidReceived;
 @property NSString *adServerRequest;
 @property NSString *adServerResponse;
+@property NSString *adServerRequestPostData;
 @property id adObject;
 @end
 
@@ -76,7 +75,7 @@
     @try {
         // Prebid Mobile setup!
         [self setupPrebidLocationManager];
-        [self setPrebidTargetingParams];
+        //[self setPrebidTargetingParams];
         
         // Retriev settings from core data and create ad unit based on that
         NSString *adFormatName = [[NSUserDefaults standardUserDefaults] stringForKey:kAdFormatNameKey];
@@ -93,8 +92,14 @@
                 [( (PBBannerAdUnit *) adUnit) addSize: CGSizeMake(320, 50)];
             } else if ([adSizeString isEqualToString: kSizeString300x250]) {
                 [( (PBBannerAdUnit *) adUnit) addSize: CGSizeMake(300, 250)];
-            } else {
+            } else if ([adSizeString isEqualToString:kSizeString320x480]){
                 [( (PBBannerAdUnit *) adUnit) addSize: CGSizeMake(320, 480)];
+            } else if ([adSizeString isEqualToString:kSizeString320x100]){
+                [( (PBBannerAdUnit *) adUnit) addSize: CGSizeMake(320, 100)];
+            } else if ([adSizeString isEqualToString:kSizeString300x600]){
+                [( (PBBannerAdUnit *) adUnit) addSize: CGSizeMake(300, 600)];
+            } else {
+                [( (PBBannerAdUnit *) adUnit) addSize: CGSizeMake(728, 90)];
             }
         } else if ([adFormatName isEqualToString:kInterstitialString]){
             adUnit = [[PBInterstitialAdUnit alloc] initWithAdUnitIdentifier:adUnitID andConfigId:configId];
@@ -198,9 +203,6 @@
             dfpAdView.adUnitID = adUnitID;
             dfpAdView.delegate = self;
             dfpAdView.rootViewController = (UIViewController *)_delegate;
-            // hack for dfp to load a webview
-            dfpAdView.frame = CGRectMake(-300,-250 ,300,250);
-            [((UIViewController *) _delegate).view addSubview:dfpAdView];
             [PrebidMobile setBidKeywordsOnAdObject:dfpAdView withAdUnitId:adUnitID withTimeout:600 completionHandler:^{
                 [dfpAdView loadRequest:[DFPRequest request]];
             }];
@@ -230,6 +232,10 @@
     return self.adServerResponse;
 }
 
+- (NSString *)getAdServerRequestPostData
+{
+    return self.adServerRequestPostData;
+}
 #pragma mark - DFP delegate
 - (void)interstitial:(GADInterstitial *)ad didFailToReceiveAdWithError:(GADRequestError *)error
 {
@@ -238,7 +244,7 @@
 
 - (void)interstitialDidReceiveAd:(GADInterstitial *)ad
 {
-    if ([self.adServerResponse containsString:@"pbm.js"]) {
+    if ([self.adServerResponse containsString:@"pbm.js"]||[self.adServerResponse containsString:@"creative.js"]) {
         [self.delegate adServerResponseContainsPBMCreative:YES];
     } else {
         [self.delegate adServerResponseContainsPBMCreative:NO];
@@ -247,7 +253,7 @@
 
 - (void)adViewDidReceiveAd:(GADBannerView *)bannerView
 {
-    if ([PBViewTool checkDFPAdViewContainsPBMAd:bannerView]) {
+    if ([self.adServerResponse containsString:@"pbm.js"]||[self.adServerResponse containsString:@"creative.js"]) {
         [self.delegate adServerResponseContainsPBMCreative:YES];
     } else {
         [self.delegate adServerResponseContainsPBMCreative:NO];
@@ -263,7 +269,7 @@
 #pragma mark - MoPub delegate
 - (void)interstitialDidLoadAd:(MPInterstitialAdController *)interstitial
 {
-    if ([self.adServerResponse containsString:@"pbm.js"]) {
+    if ([self.adServerResponse containsString:@"pbm.js"] || [self.adServerResponse containsString:@"creative.js"]) {
         [self.delegate adServerResponseContainsPBMCreative:YES];
     } else {
         [self.delegate adServerResponseContainsPBMCreative:NO];
@@ -361,10 +367,11 @@
     }
 }
 
-- (void)willInterceptAdServerRequest:(NSString *)request
+- (void)willInterceptAdServerRequest:(NSString *)request withPostData:(NSString *)data
 {
     self.adServerRequest = request;
-    [self.delegate adServerRequestSent:request];
+    self.adServerRequestPostData = data;
+    [self.delegate adServerRequestSent:request andPostData: data];
 }
 
 - (void)didReceiveAdServerResponse:(NSString *)response forRequest:(NSString *)request

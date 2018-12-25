@@ -19,11 +19,13 @@
 #import "SegmentCell.h"
 #import "LabelAccessoryCell.h"
 #import "HeaderCell.h"
+#import "FooterCell.h"
 #import "IdCell.h"
 #import "AdSizeController.h"
 #import "IDInputViewController.h"
 #import "PBVSharedConstants.h"
 #import "TestSummaryViewController.h"
+#import "ToolReachability.h"
 
 NSString *__nonnull const kGeneralInfoText = @"General Info";
 NSString *__nonnull const kAdFormatBanner = @"Banner";
@@ -36,6 +38,8 @@ NSString *__nonnull const kAdServerMoPub = @"MoPub";
 NSString *__nonnull const kPrebidServerInfoText = @"Prebid Server Info";
 NSString *__nonnull const kPrebidHostAppnexus = @"AppNexus";
 NSString *__nonnull const kPrebidHostRubicon = @"Rubicon";
+
+NSString *__nonnull const kfooter = @"footer";
 
 NSString *__nonnull const kAdFormatText = @"Ad Format";
 NSString *__nonnull const kAdSizeText = @"Ad Size";
@@ -85,10 +89,6 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
     
     [self.tableView setBackgroundColor:[UIColor colorWithRed:0.89 green:0.89 blue:0.89 alpha:1.0]];
     
-    // remove the scrolling of tableview
-    self.tableView.scrollEnabled = NO;
-    self.chosenAdSize = @"300x250";
-    
     // Uncomment the following line to preserve selection between presentations.
     self.clearsSelectionOnViewWillAppear = NO;
     
@@ -98,10 +98,16 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
     
     self.tableViewDictionaryItems = @{kGeneralInfoText :self.generalInfoTitles, kAdServerInfoText:self.adServerTitles, kPrebidServerInfoText: self.prebidServerTitles};
     
-    self.sectionTitles = @[kGeneralInfoText, kAdServerInfoText, kPrebidServerInfoText];
+    self.sectionTitles = @[kGeneralInfoText, kAdServerInfoText, kPrebidServerInfoText, kfooter];
 
     [self.tableView setSeparatorColor:[UIColor darkGrayColor]];
     
+}
+
+-(void) viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+    self.tableView.sectionHeaderHeight = UITableViewAutomaticDimension;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -112,11 +118,12 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
 #pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return self.sectionTitles.count ;
+    return self.sectionTitles.count;
 }
 
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
     
+    if(section != 3){
     static NSString *headerCell = @"HeaderCell";
     
     HeaderCell *cell = (HeaderCell *)[tableView dequeueReusableCellWithIdentifier:headerCell];
@@ -127,6 +134,20 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
         cell.lblHeader.text = titleText;
     }
     return cell;
+    } else {
+        static NSString *footerCell = @"FooterCell";
+        
+        FooterCell *cell = (FooterCell *)[tableView dequeueReusableCellWithIdentifier:footerCell];
+        
+        [cell.btnRunTests addTarget:self action:@selector(didPressNext:) forControlEvents:UIControlEventTouchUpInside];
+        if([self checkIfTestButtonCanBeDisabled] == FALSE){
+            cell.btnRunTests.enabled = NO;
+            [cell.btnRunTests setBackgroundColor:[UIColor colorWithRed:0.93 green:0.59 blue:0.12 alpha:0.3]];
+        }else{
+            cell.btnRunTests.enabled = YES;
+        }
+        return cell;
+    }
 }
 
 -(void) tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(nonnull NSIndexPath *)indexPath {
@@ -148,22 +169,89 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
     if ([cell respondsToSelector:@selector(setLayoutMargins:)]) {
         [cell setLayoutMargins:UIEdgeInsetsZero];
     }
+    
+    if(indexPath.section == 0 && indexPath.row == 0 && [cell isKindOfClass:[SegmentCell class]]){
+        SegmentCell *segmentCell = (SegmentCell *) cell;
+        if(segmentCell.segmentControl.selectedSegmentIndex == 0){
+            [[NSUserDefaults standardUserDefaults] setObject:kAdFormatBanner forKey:kAdFormatNameKey];
+            
+        } else {
+            [[NSUserDefaults standardUserDefaults] setObject:kAdFormatInterstitial forKey:kAdFormatNameKey];
+        }
+    }
+    
+    if(indexPath.section == 0 && indexPath.row == 1 && [cell isKindOfClass:[LabelAccessoryCell class]]){
+        LabelAccessoryCell *labelCell = (LabelAccessoryCell *) cell;
+        [[NSUserDefaults standardUserDefaults] setObject:labelCell.lblSelectedContent.text forKey:kAdSizeKey];
+        
+    }
+    
+    if(indexPath.section == 1 && indexPath.row == 0 && [cell isKindOfClass:[SegmentCell class]]){
+        SegmentCell *segmentCell = (SegmentCell *) cell;
+        if(segmentCell.segmentControl.selectedSegmentIndex == 0){
+            [[NSUserDefaults standardUserDefaults] setObject:kAdServerDFP forKey:kAdServerNameKey];
+            
+        } else {
+            [[NSUserDefaults standardUserDefaults] setObject:kAdServerMoPub forKey:kAdServerNameKey];
+            
+        }
+    }
+    
+    if(indexPath.section == 1 && indexPath.row == 1 && [cell isKindOfClass:[LabelAccessoryCell class]]){
+        NSArray *bidPriceArray = [self.bidPrice componentsSeparatedByString:@"$"];
+        [[NSUserDefaults standardUserDefaults] setObject:bidPriceArray[1] forKey:kBidPriceKey];
+    }
+    
+    if(indexPath.section == 1 && indexPath.row == 2 && [cell isKindOfClass:[IdCell class]]){
+        IdCell *idCell = (IdCell *) cell;
+        NSString *trimmedId = [self removeSpacesAndNewLines:idCell.lblId.text];
+        [[NSUserDefaults standardUserDefaults] setObject:trimmedId forKey:kAdUnitIdKey];
+    }
+    
+    if(indexPath.section == 2 && indexPath.row == 0 && [cell isKindOfClass:[SegmentCell class]]){
+        SegmentCell *segmentCell = (SegmentCell *) cell;
+        if(segmentCell.segmentControl.selectedSegmentIndex == 0){
+            [[NSUserDefaults standardUserDefaults] setObject:kPrebidHostAppnexus forKey:kPBHostKey];
+            
+        } else {
+            [[NSUserDefaults standardUserDefaults] setObject:kPrebidHostRubicon forKey:kPBHostKey];
+            
+        }
+    }
+    
+    if(indexPath.section == 2 && indexPath.row == 1 && [cell isKindOfClass:[IdCell class]]){
+        IdCell *idCell = (IdCell *) cell;
+        NSString *trimmedId = [self removeSpacesAndNewLines:idCell.lblId.text];
+        [[NSUserDefaults standardUserDefaults] setObject:trimmedId forKey:kPBAccountKey];
+    }
+    
+    if(indexPath.section == 2 && indexPath.row == 2 && [cell isKindOfClass:[IdCell class]]){
+        IdCell *idCell = (IdCell *) cell;
+        NSString *trimmedId = [self removeSpacesAndNewLines:idCell.lblId.text];
+        [[NSUserDefaults standardUserDefaults] setObject:trimmedId forKey:kPBConfigKey];
+    }
+    
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     
-    if(section != 0){
-        return 3;
+    if(section == 0){
+        return 2;
+    } else if(section == 3){
+        return 0;
     }
     
-    return 2;
+    return 3;
 }
 
 -(CGFloat) tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
     
     if(indexPath.section == 0){
         if(indexPath.row == 0){
-            return 55.0f;
+            return 53.0f;
         } else if(indexPath.row == 1){
             return 40.0f;
         }
@@ -171,7 +259,7 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
         if(indexPath.row == 0){
             return 55.0f;
         } else if(indexPath.row == 1){
-            return 40.0f;
+            return 45.0f;
         }else {
             return 61.0f;
         }
@@ -179,6 +267,8 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
         if(indexPath.row == 0){
             return 55.0f;
         }
+    } else if(indexPath.section == 3){
+        return 0;
     }
     
     return 61.0f;
@@ -191,11 +281,11 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
         return [self configureGeneralInfoSection:tableView withIndexPath:indexPath];
     } else if(indexPath.section == 1){
         return [self configureAdServerSection:tableView withIndexPath:indexPath];
-    } else{
+    } else if(indexPath.section == 2){
         return [self configurePrebidServerSection:tableView withIndexPath:indexPath];
     }
 
-    //return nil;
+    return nil;
 }
 
 -(void) tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -240,41 +330,10 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
 }
 
 -(CGFloat) tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return 40.0f;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
-    if(section == 2)
-        return 50.0f;
+    if(section != 3)
+        return 40.0f;
     else
-        return 0.0f;
-}
-
-- (nullable UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
-    
-    if(section == 2){
-        UIView *footerView=[[UIView alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 50.0f)];
-        UIButton *nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        [nextButton setTitle:@"Run Tests" forState:UIControlStateNormal];
-        nextButton.frame = CGRectMake(0.0, 0.0, 335.0, 35.0);
-        [nextButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-        [nextButton setBackgroundColor:[UIColor colorWithRed:0.93 green:0.59 blue:0.12 alpha:1.0]];
-        [nextButton.titleLabel setTextAlignment:NSTextAlignmentCenter];
-        [nextButton addTarget:self action:@selector(didPressNext:) forControlEvents:UIControlEventTouchUpInside];
-        nextButton.clipsToBounds = YES;
-        if([self checkIfTestButtonCanBeDisabled] == FALSE){
-            nextButton.enabled = NO;
-            [nextButton setBackgroundColor:[UIColor colorWithRed:0.93 green:0.59 blue:0.12 alpha:0.3]];
-        }else{
-            nextButton.enabled = YES;
-        }
-        [footerView addSubview:nextButton];
-        nextButton.center = footerView.center;
-        return footerView;
-    } else
-    {
-        return nil;
-    }
+        return 50.0f;
 }
 
 - (UITableViewCell *) configureGeneralInfoSection:(UITableView *) tableView withIndexPath:(NSIndexPath *)indexPath {
@@ -294,9 +353,11 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
             if([[NSUserDefaults standardUserDefaults] objectForKey:kAdFormatNameKey] != nil && ![[[NSUserDefaults standardUserDefaults] objectForKey:kAdFormatNameKey] isEqualToString:@""]){
                 if([[[NSUserDefaults standardUserDefaults] objectForKey:kAdFormatNameKey] isEqualToString: kAdFormatBanner]){
                     [cell.segmentControl setSelectedSegmentIndex:0];
+                    self.isInterstitial = NO;
                     
                 } else {
                      [cell.segmentControl setSelectedSegmentIndex:1];
+                    self.isInterstitial = YES;
                 }
             }
         }
@@ -313,20 +374,16 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
             if(self.isInterstitial == NO){
                 
                 if(self.chosenAdSize == nil || [self.chosenAdSize isEqualToString:@""]){
-                    cell.lblSelectedContent.text = @"300x250";
-                    
+                
                     if([[NSUserDefaults standardUserDefaults] objectForKey:kAdSizeKey] != nil && ![[[NSUserDefaults standardUserDefaults] objectForKey:kAdSizeKey] isEqualToString:@""]){
-                        cell.lblSelectedContent.text = [[NSUserDefaults standardUserDefaults] objectForKey:kAdSizeKey];
-                        
-                        self.chosenAdSize = cell.lblSelectedContent.text;
+                        self.chosenAdSize = [[NSUserDefaults standardUserDefaults] objectForKey:kAdSizeKey];
                     }
-                    
-                } else {
-                    cell.lblSelectedContent.text = self.chosenAdSize;
+                    if ([self.chosenAdSize isEqualToString:@"Interstitial"] || self.chosenAdSize == nil) {
+                        self.chosenAdSize = @"300x250";
+                    }
                 }
+                cell.lblSelectedContent.text = self.chosenAdSize;
                 [cell.lblSelectedContent setTextColor:[UIColor colorWithRed:0.40 green:0.40 blue:0.40 alpha:1.0]];
-                
-                
                 cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
             } else {
                 cell.lblSelectedContent.text = @"Interstitial";
@@ -562,6 +619,9 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
     NSString *amountString = [self currencyFormatting:currencyField.text];
     currencyField.text = amountString;
     self.bidPrice = amountString;
+    
+    NSArray *bidPriceArray = [self.bidPrice componentsSeparatedByString:@"$"];
+    [[NSUserDefaults standardUserDefaults] setObject:bidPriceArray[1] forKey:kBidPriceKey];
 }
 
 -(NSString *) currencyFormatting :(NSString *) currency {
@@ -647,80 +707,39 @@ NSString *__nonnull const KPBHostLabel = @"Server Host";
 
 -(void) didPressNext:(id) sender {
     
-    for (int section = 0; section < [self.tableView numberOfSections]; section++) {
-        for (int row = 0; row < [self.tableView numberOfRowsInSection:section]; row++) {
-            NSIndexPath* cellPath = [NSIndexPath indexPathForRow:row inSection:section];
-            UITableViewCell* cell = [self.tableView cellForRowAtIndexPath:cellPath];
-            
-            if(section == 0 && row == 0 && [cell isKindOfClass:[SegmentCell class]]){
-                SegmentCell *segmentCell = (SegmentCell *) cell;
-                if(segmentCell.segmentControl.selectedSegmentIndex == 0){
-                    [[NSUserDefaults standardUserDefaults] setObject:kAdFormatBanner forKey:kAdFormatNameKey];
-
-                } else {
-                    [[NSUserDefaults standardUserDefaults] setObject:kAdFormatInterstitial forKey:kAdFormatNameKey];
-                }
-            }
-            
-            if(section == 0 && row == 1 && [cell isKindOfClass:[LabelAccessoryCell class]]){
-                LabelAccessoryCell *labelCell = (LabelAccessoryCell *) cell;
-                [[NSUserDefaults standardUserDefaults] setObject:labelCell.lblSelectedContent.text forKey:kAdSizeKey];
-                
-            }
-            
-            if(section == 1 && row == 0 && [cell isKindOfClass:[SegmentCell class]]){
-                SegmentCell *segmentCell = (SegmentCell *) cell;
-                if(segmentCell.segmentControl.selectedSegmentIndex == 0){
-                    [[NSUserDefaults standardUserDefaults] setObject:kAdServerDFP forKey:kAdServerNameKey];
-
-                } else {
-                    [[NSUserDefaults standardUserDefaults] setObject:kAdServerMoPub forKey:kAdServerNameKey];
-
-                }
-            }
-            
-            if(section == 1 && row == 1 && [cell isKindOfClass:[LabelAccessoryCell class]]){
-                NSArray *bidPriceArray = [self.bidPrice componentsSeparatedByString:@"$"];
-                [[NSUserDefaults standardUserDefaults] setObject:bidPriceArray[1] forKey:kBidPriceKey];
-            }
-            
-            if(section == 1 && row == 2 && [cell isKindOfClass:[IdCell class]]){
-                IdCell *idCell = (IdCell *) cell;
-                NSString *trimmedId = [self removeSpacesAndNewLines:idCell.lblId.text];
-                [[NSUserDefaults standardUserDefaults] setObject:trimmedId forKey:kAdUnitIdKey];
-            }
-            
-            if(section == 2 && row == 0 && [cell isKindOfClass:[SegmentCell class]]){
-                SegmentCell *segmentCell = (SegmentCell *) cell;
-                if(segmentCell.segmentControl.selectedSegmentIndex == 0){
-                    [[NSUserDefaults standardUserDefaults] setObject:kPrebidHostAppnexus forKey:kPBHostKey];
-
-                } else {
-                    [[NSUserDefaults standardUserDefaults] setObject:kPrebidHostRubicon forKey:kPBHostKey];
-
-                }
-            }
-            
-            if(section == 2 && row == 1 && [cell isKindOfClass:[IdCell class]]){
-                IdCell *idCell = (IdCell *) cell;
-                  NSString *trimmedId = [self removeSpacesAndNewLines:idCell.lblId.text];
-                [[NSUserDefaults standardUserDefaults] setObject:trimmedId forKey:kPBAccountKey];
-            }
-            
-            if(section == 2 && row == 2 && [cell isKindOfClass:[IdCell class]]){
-                IdCell *idCell = (IdCell *) cell;
-                  NSString *trimmedId = [self removeSpacesAndNewLines:idCell.lblId.text];
-                [[NSUserDefaults standardUserDefaults] setObject:trimmedId forKey:kPBConfigKey];
-            }
-        }
+    ToolReachability *reachability = [ToolReachability reachabilityForInternetConnection];
+    ToolNetworkStatus status = [reachability currentReachabilityStatus];
+    NSUInteger connectionType = 0;
+    switch (status) {
+        case ToolNetworkStatusReachableViaWiFi:
+            connectionType = 1;
+            break;
+        case ToolNetworkStatusReachableViaWWAN:
+            connectionType = 2;
+            break;
+        default:
+            connectionType = 0;
+            break;
     }
-    [[NSUserDefaults standardUserDefaults] synchronize];
     
-    NSString * storyboardName = @"Main";
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle: nil];
-    TestSummaryViewController * summaryViewController = [storyboard instantiateViewControllerWithIdentifier:@"summaryViewController"];
+   if (connectionType == 0) {
+       UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Network Connection" message:@"No network available." preferredStyle:UIAlertControllerStyleAlert];
+       
+       UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:^(UIAlertAction
+                                                                                                                 *action){[self.navigationController popViewControllerAnimated:YES];}];
+       [alert addAction:cancel];
+       [self presentViewController:alert animated:YES completion:nil];
+       
+   } else {
     
-    [self.navigationController pushViewController:summaryViewController animated:YES];
+       [[NSUserDefaults standardUserDefaults] synchronize];
+    
+       NSString * storyboardName = @"Main";
+       UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle: nil];
+       TestSummaryViewController * summaryViewController = [storyboard instantiateViewControllerWithIdentifier:@"summaryViewController"];
+    
+       [self.navigationController pushViewController:summaryViewController animated:YES];
+   }
 }
 
 - (NSString *) removeSpacesAndNewLines: (NSString *) original

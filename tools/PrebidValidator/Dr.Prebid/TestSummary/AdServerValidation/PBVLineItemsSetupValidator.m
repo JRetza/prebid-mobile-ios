@@ -20,9 +20,11 @@
 #import "PBVSharedConstants.h"
 #import "MPAdView.h"
 #import "MPInterstitialAdController.h"
+#import "MPInterstitialAdManager.h"
 #import "PBViewTool.h"
 #import <PrebidMobile/PBAdUnit.h>
 #import "AdServerValidationURLProtocol.h"
+#import "NSURLSessionConfiguration+PBProtocols.h"
 
 @interface PBVLineItemsSetupValidator() <MPAdViewDelegate,
                                          MPInterstitialAdControllerDelegate,
@@ -33,6 +35,7 @@
 @property NSString *requestUUID;
 @property NSString *adServerResponseString;
 @property NSString *adServerRequestString;
+@property NSString *adServerRequestPostData;
 @property NSDictionary *keywords;
 @end
 
@@ -46,11 +49,11 @@
     return self;
 }
 
-- (void)willInterceptRequest:(NSString *)requestString
+- (void)willInterceptRequest:(NSString *)requestString andPostData:(NSString *) data
 {
-    if ([requestString containsString:self.requestUUID]) {
-        NSLog(@"received request string: %@", requestString);
+    if ([requestString containsString:self.requestUUID] || [data containsString:self.requestUUID]) {
         self.adServerRequestString = requestString;
+        self.adServerRequestPostData = data;
         BOOL containsKeyValues = YES;
         if ([requestString containsString:@"pubads.g.doubleclick.net/gampad/ads?"]) {
             for (NSString *key in self.keywords.allKeys) {
@@ -62,7 +65,7 @@
         } else {
             for (NSString *key in self.keywords.allKeys) {
                 NSString *keyValuePair = [NSString stringWithFormat:@"%@:%@", key,[self.keywords objectForKey:key]];
-                if (![requestString containsString:keyValuePair]) {
+                if (![data containsString:keyValuePair]) {
                     containsKeyValues = NO;
                 }
             }
@@ -77,19 +80,13 @@
 
 - (void)didReceiveResponse:(NSString *)responseString forRequest:(NSString *)requestString
 {
-    if (self.requestUUID != nil && [requestString containsString:self.requestUUID]) {
+    if (self.requestUUID != nil && ([requestString containsString:self.requestUUID] || [self.adServerRequestPostData containsString:self.requestUUID])) {
         self.adServerResponseString = responseString;
     }
 }
 
 - (void)startTest
 {
-    NSString *host = [[NSUserDefaults standardUserDefaults]stringForKey:kPBHostKey];
-    if ([host isEqualToString:kRubiconString]) {
-        [self.delegate adServerDidNotRespondWithPrebidCreative];
-        return;
-    }
-    
     NSString *adServerName = [[NSUserDefaults standardUserDefaults] stringForKey:kAdServerNameKey];
     NSString *adFormatName = [[NSUserDefaults standardUserDefaults] stringForKey:kAdFormatNameKey];
     NSString *adSizeString = [[NSUserDefaults standardUserDefaults] stringForKey:kAdSizeKey];
@@ -121,6 +118,7 @@
         if ([adFormatName isEqualToString:kBannerString]) {
             self.keywords = [self createUniqueKeywordsWithBidPrice:bidPrice forSize:adSizeString];
             MPAdView *adView = [self createMPAdViewWithAdUnitId:adUnitID WithSize:adSize WithKeywords:self.keywords];
+            [adView stopAutomaticallyRefreshingContents]; // forcing on the client side, server side management seems to be broken
             self.adObject = adView;
             [adView loadAd];
         } else if ([adFormatName isEqualToString:kInterstitialString]){
@@ -152,7 +150,8 @@
 }
 - (NSDictionary *) createUniqueKeywordsWithBidPrice:(NSString *)bidPrice forSize:(NSString *)adSizeString
 {
-    NSMutableDictionary *keywords = [[[LineItemKeywordsManager sharedManager] keywordsWithBidPrice:bidPrice forSize:adSizeString] mutableCopy];
+    NSString *host = [[NSUserDefaults standardUserDefaults]stringForKey:kPBHostKey];
+    NSMutableDictionary *keywords = [[[LineItemKeywordsManager sharedManager] keywordsWithBidPrice:bidPrice forSize:adSizeString forHost:host] mutableCopy];
     self.requestUUID = [[NSUUID UUID] UUIDString];
     [keywords setObject:self.requestUUID forKey:@"hb_dr_prebid"];
     return [keywords copy];
@@ -178,30 +177,30 @@
 
 - (void)adViewDidReceiveAd:(GADBannerView *)bannerView
 {
-    if ([PBViewTool checkDFPAdViewContainsPBMAd:bannerView]) {
+    if (self.adServerResponseString != nil && ([self.adServerResponseString containsString:@"pbm.js"] || [self.adServerResponseString containsString:@"creative.js"])) {
         [self.delegate adServerRespondedWithPrebidCreative];
-    } else{
-        [self.delegate adServerDidNotRespondWithPrebidCreative];
+    } else {
+        [self.delegate adServerDidNotRespondWithPrebidCreative:nil];
     }
 }
 
 - (void)adView:(GADBannerView *)bannerView didFailToReceiveAdWithError:(GADRequestError *)error
 {
-    [self.delegate adServerDidNotRespondWithPrebidCreative];
+    [self.delegate adServerDidNotRespondWithPrebidCreative:error];
 }
 
 - (void)interstitialDidReceiveAd:(GADInterstitial *)ad
 {
-    if (self.adServerResponseString != nil && [self.adServerResponseString containsString:@"pbm.js"]) {
+    if (self.adServerResponseString != nil && ([self.adServerResponseString containsString:@"pbm.js"] || [self.adServerResponseString containsString:@"creative.js"])) {
          [self.delegate adServerRespondedWithPrebidCreative];
     } else {
-         [self.delegate adServerDidNotRespondWithPrebidCreative];
+        [self.delegate adServerDidNotRespondWithPrebidCreative:nil];
     }
 }
 
 - (void)interstitial:(GADInterstitial *)ad didFailToReceiveAdWithError:(GADRequestError *)error
 {
-    [self.delegate adServerDidNotRespondWithPrebidCreative];
+    [self.delegate adServerDidNotRespondWithPrebidCreative:error];
 }
 
 #pragma mark MoPub
@@ -231,7 +230,7 @@
 - (MPInterstitialAdController *) createMPInterstitialAdControllerWithAdUnitId: (NSString *) adUnitID WithKeywords:(NSDictionary *) keywordsDict
 {
     NSString *keywords = [self formatMoPubKeywordStringFromDictionary:keywordsDict];
-    Class MPInterstitialClass = [MPInterstitialAdController class];   
+    Class MPInterstitialClass = [MPInterstitialAdController class];
     SEL initMethodSel = NSSelectorFromString(@"initWithAdUnitId:");
     id interstitial = [MPInterstitialClass alloc];
     if ([interstitial respondsToSelector:initMethodSel]) {
@@ -241,8 +240,6 @@
         [invocation setTarget:interstitial];
         [invocation setArgument:&adUnitID atIndex:2];
         [invocation invoke];
-        NSMutableArray *interstitials = [MPInterstitialClass valueForKey:@"sharedInterstitials"];
-        [interstitials addObject:interstitial];
         [(MPInterstitialAdController *)interstitial setKeywords:keywords];
         [(MPInterstitialAdController *)interstitial setDelegate:self];
     }
@@ -252,39 +249,30 @@
 - (void)interstitialDidLoadAd:(MPInterstitialAdController *)interstitial
 {
  
-    if (self.adServerResponseString != nil && [self.adServerResponseString containsString:@"pbm.js"]) {
+    if (self.adServerResponseString != nil && ( [self.adServerResponseString containsString:@"pbm.js"] || [self.adServerResponseString containsString:@"creative.js"])) {
         [self.delegate adServerRespondedWithPrebidCreative];
     } else {
-        [self.delegate adServerDidNotRespondWithPrebidCreative];
+        [self.delegate adServerDidNotRespondWithPrebidCreative:nil];
     }
 }
 
 - (void)interstitialDidFailToLoadAd:(MPInterstitialAdController *)interstitial
 {
-    [self.delegate adServerDidNotRespondWithPrebidCreative];
+    [self.delegate adServerDidNotRespondWithPrebidCreative:nil];
 }
 
 -(void)adViewDidLoadAd:(MPAdView *)view
 {
-    __weak PBVLineItemsSetupValidator *weakSelf = self;
-    
-    [PBViewTool checkMPAdViewContainsPBMAd:view
-                       withCompletionHandler:^(BOOL result) {
-                           __strong PBVLineItemsSetupValidator *strongSelf = weakSelf;
-                           if (result) {
-                  
-                                   [strongSelf.delegate adServerRespondedWithPrebidCreative];
-                               } else {
-                                   [strongSelf.delegate adServerDidNotRespondWithPrebidCreative];
-                               }
-                           
-                       }];
- 
+    if (self.adServerResponseString != nil && ([self.adServerResponseString containsString:@"pbm.js"] || [self.adServerResponseString containsString:@"creative.js"])) {
+        [self.delegate adServerRespondedWithPrebidCreative];
+    } else {
+        [self.delegate adServerDidNotRespondWithPrebidCreative:nil];
+    }
 }
 
 - (void)adViewDidFailToLoadAd:(MPAdView *)view
 {
-    [self.delegate adServerDidNotRespondWithPrebidCreative];
+    [self.delegate adServerDidNotRespondWithPrebidCreative:nil];
 }
 
 - (UIViewController *)viewControllerForPresentingModalView
@@ -305,6 +293,11 @@
 - (NSString *)getAdServerRequest
 {
     return self.adServerRequestString;
+}
+
+- (NSString *)getAdServerPostData
+{
+    return self.adServerRequestPostData;
 }
 @end
 

@@ -17,6 +17,7 @@
 #import "SDKValidationURLProtocol.h"
 @interface SDKValidationURLProtocol() <NSURLConnectionDelegate>
 @property (nonatomic, strong) NSURLConnection *connection;
+@property NSMutableData *data;
 @end
 
 @implementation SDKValidationURLProtocol
@@ -40,20 +41,46 @@ static id<SDKValidationURLProtocolDelegate> classDelegate = nil;
     if ([NSURLProtocol propertyForKey:@"DemandValidationRequest" inRequest:request]) {
         return NO;
     }
-    if ([request.URL.absoluteString containsString:@"prebid.adnxs.com/pbs/v1/openrtb2/auction"]) {
+    if ([SDKValidationURLProtocol supportedPBSHost:request.URL.absoluteString]) {
         if (classDelegate != nil) {
             [classDelegate willInterceptPrebidServerRequest];
         }
         return YES;
     }
-    if (![request.URL.absoluteString containsString:@"hb_dr_prebid"] && ([request.URL.absoluteString containsString:@"ads.mopub.com/m/ad?"] || [request.URL.absoluteString containsString:@"pubads.g.doubleclick.net/gampad/ads?"]))
+    if (![request.URL.absoluteString containsString:@"hb_dr_prebid"] && [request.URL.absoluteString containsString:@"pubads.g.doubleclick.net/gampad/ads?"])
     {
         if (classDelegate != nil) {
-            [classDelegate willInterceptAdServerRequest:request.URL.absoluteString];
+            [classDelegate willInterceptAdServerRequest:request.URL.absoluteString withPostData:nil];
         }
         return YES;
     }
-    
+    if ([request.URL.absoluteString containsString:@"ads.mopub.com/m/ad"]){
+        if (request.HTTPBodyStream != nil) {
+            NSInputStream *stream = request.HTTPBodyStream;
+            uint8_t byteBuffer[4096];
+            [stream open];
+            if (stream.hasBytesAvailable)
+            {
+                NSInteger bytesRead = [stream read:byteBuffer maxLength:sizeof(byteBuffer)]; //max len must match buffer size
+                NSString *stringFromData = [[NSString alloc] initWithBytes:byteBuffer length:bytesRead encoding:NSUTF8StringEncoding];
+                if(![stringFromData containsString:@"hb_dr_prebid"] ){
+                    if (classDelegate != nil) {
+                        [classDelegate willInterceptAdServerRequest: request.URL.absoluteString withPostData: stringFromData];
+                    }
+                    return YES;
+                }
+            }
+        }
+    }
+    return NO;
+}
+
++ (BOOL) supportedPBSHost:(NSString *) hostURL {
+    if (hostURL != nil) {
+        if ([hostURL containsString:@"prebid.adnxs.com/pbs/v1/openrtb2/auction"] || [hostURL containsString:@"prebid-server.rubiconproject.com/openrtb2/auction"]) {
+            return YES;
+        }
+    }
     return NO;
 }
 
@@ -67,6 +94,7 @@ static id<SDKValidationURLProtocolDelegate> classDelegate = nil;
 
 - (void)startLoading
 {
+    self.data = [[NSMutableData alloc] init];
     NSMutableURLRequest *newRequest = [self.request mutableCopy];
     [NSURLProtocol setProperty:@YES forKey:@"PrebidURLProtocolHandledKey" inRequest:newRequest];
 #pragma clang diagnostic push
@@ -87,19 +115,19 @@ static id<SDKValidationURLProtocolDelegate> classDelegate = nil;
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     [self.client URLProtocol:self didLoadData:data];
-    NSString *content = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    if (classDelegate != nil) {
-        if ([self.request.URL.absoluteString containsString:@"prebid.adnxs.com/pbs/v1/openrtb2/auction"]) {
-            [classDelegate didReceivePrebidServerResponse:content];
-        } else {
-            [classDelegate didReceiveAdServerResponse:content forRequest:self.request.URL.absoluteString];
-        }
-
-    }
+    [self.data appendData:data];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     [self.client URLProtocolDidFinishLoading:self];
+    NSString *content = [[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding];
+    if (classDelegate != nil) {
+        if ([SDKValidationURLProtocol supportedPBSHost:self.request.URL.absoluteString]) {
+            [classDelegate didReceivePrebidServerResponse:content];
+        } else {
+            [classDelegate didReceiveAdServerResponse:content forRequest:self.request.URL.absoluteString];
+        }
+    }
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {

@@ -15,9 +15,11 @@
  */
 
 #import "AdServerValidationURLProtocol.h"
+#import "MPURLRequest.h"
 
 @interface AdServerValidationURLProtocol () <NSURLConnectionDelegate>
 @property (nonatomic, strong) NSURLConnection *connection;
+@property NSMutableData *data;
 @end
 
 @implementation AdServerValidationURLProtocol
@@ -37,12 +39,44 @@ static id<AdServerValidationURLProtocolDelegate> classDelegate = nil;
     if ([NSURLProtocol propertyForKey:@"PrebidURLProtocolHandledKey" inRequest:request]) {
         return NO;
     }
-    if ([request.URL.absoluteString containsString:@"hb_dr_prebid"] && ([request.URL.absoluteString containsString:@"ads.mopub.com/m/ad?"] || [request.URL.absoluteString containsString:@"pubads.g.doubleclick.net/gampad/ads?"]))
+    if (([request.URL.absoluteString containsString:@"pubads.g.doubleclick.net/gampad/ads?"] && [request.URL.absoluteString containsString:@"hb_dr_prebid"]))
     {
         if (classDelegate != nil) {
-            [classDelegate willInterceptRequest:request.URL.absoluteString];
+            [classDelegate willInterceptRequest:request.URL.absoluteString andPostData:nil];
         }
         return YES;
+    }
+    if ([request.URL.absoluteString containsString:@"ads.mopub.com/m/ad"]){
+        if (request.HTTPBodyStream != nil) {
+            NSInputStream *stream = request.HTTPBodyStream;
+            uint8_t byteBuffer[4096];
+            [stream open];
+            if (stream.hasBytesAvailable)
+            {
+                NSInteger bytesRead = [stream read:byteBuffer maxLength:sizeof(byteBuffer)]; //max len must match buffer size
+                NSString *stringFromData = [[NSString alloc] initWithBytes:byteBuffer length:bytesRead encoding:NSUTF8StringEncoding];
+                if([stringFromData containsString:@"hb_dr_prebid"] ){
+                    if (classDelegate != nil) {
+                        [classDelegate willInterceptRequest:request.URL.absoluteString andPostData: stringFromData];
+                    }
+                    return YES;
+                }
+            }
+        }
+    }
+    return NO;
+}
++ (BOOL) containsDrPrebidKeyInPostData: (NSURLRequest *)request {
+    if ( request.HTTPBodyStream != nil) {
+        NSInputStream *stream = request.HTTPBodyStream;
+        uint8_t byteBuffer[4096];
+        [stream open];
+        if (stream.hasBytesAvailable)
+        {
+            NSInteger bytesRead = [stream read:byteBuffer maxLength:sizeof(byteBuffer)]; //max len must match buffer size
+            NSString *stringFromData = [[NSString alloc] initWithBytes:byteBuffer length:bytesRead encoding:NSUTF8StringEncoding];
+            return [stringFromData containsString:@"hb_dr_prebid"];
+        }
     }
     return NO;
 }
@@ -56,6 +90,7 @@ static id<AdServerValidationURLProtocolDelegate> classDelegate = nil;
 }
 
 - (void)startLoading {
+    self.data = [[NSMutableData alloc] init];
     NSMutableURLRequest *newRequest = [self.request mutableCopy];
     [NSURLProtocol setProperty:@YES forKey:@"PrebidURLProtocolHandledKey" inRequest:newRequest];
 #pragma clang diagnostic push
@@ -76,14 +111,15 @@ static id<AdServerValidationURLProtocolDelegate> classDelegate = nil;
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
     [self.client URLProtocol:self didLoadData:data];
-    NSString *content = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    if (classDelegate != nil) {
-        [classDelegate didReceiveResponse:content forRequest:self.request.URL.absoluteString];
-    }
+    [self.data appendData:data];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     [self.client URLProtocolDidFinishLoading:self];
+    NSString *content = [[NSString alloc] initWithData:self.data encoding:NSUTF8StringEncoding];
+    if (classDelegate != nil) {
+        [classDelegate didReceiveResponse:content forRequest:self.request.URL.absoluteString];
+    }
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {

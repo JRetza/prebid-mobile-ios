@@ -63,6 +63,8 @@
     self.testResults = [[NSMutableDictionary alloc] init];
     NSMutableDictionary *bidders = [[NSMutableDictionary alloc] init];
     [self.testResults setObject:bidders forKey:@"bidders"];
+    [self.testResults setObject:@"" forKey:@"error"];
+    [self.testResults setObject:[NSNumber numberWithInteger:200] forKey:@"responseStatus"];
     [self.testResults setObject:[[NSString alloc]initWithData:req.HTTPBody encoding:NSUTF8StringEncoding] forKey:@"request"];
     for (int i = 0; i<100; i++) {
         [self runTestWithReuqest:req CompletionHandler:^() {
@@ -97,7 +99,7 @@
 }
 
 -(void)runTestWithReuqest: (NSURLRequest *) req
-        CompletionHandler:(void (^)(void)) completionHandler;{
+        CompletionHandler:(void (^)(void)) completionHandler {
     NSMutableURLRequest *reqMutable = [req mutableCopy];
     [NSURLProtocol setProperty:@YES forKey:@"DemandValidationRequest" inRequest:reqMutable];
     NSURLSession *session = [NSURLSession sharedSession];
@@ -163,9 +165,20 @@
                                                   // if bidder error, then set the status to 2
                                                   if ([[responseDictionary objectForKey:@"ext"] objectForKey:@"errors"] != nil) {
                                                       NSDictionary *bidderErrors = [[responseDictionary objectForKey:@"ext"] objectForKey:@"errors"];
-                                                      for (NSString * key in bidderErrors.allKeys) {
-                                                          [bidderResponseStatus setObject:@"2" forKey:key];
+                                                      NSString *host = [[NSUserDefaults standardUserDefaults]stringForKey:kPBHostKey];
+                                                      if ([kRubiconString isEqualToString:host]) {
+                                                          for (NSString *key in bidderErrors.allKeys) {
+                                                              NSArray *errors = [bidderErrors mutableArrayValueForKey:key];
+                                                              if (errors != nil && errors.count >0 ) {
+                                                                  [bidderResponseStatus setObject:@"2" forKey:key];
+                                                              }
+                                                          }
+                                                      } else {
+                                                          for (NSString * key in bidderErrors.allKeys) {
+                                                              [bidderResponseStatus setObject:@"2" forKey:key];
+                                                          }
                                                       }
+                                                    
                                                   }
                                                   // if bidder time out, then set the status to 1
                                                   // todo: need an example
@@ -187,6 +200,9 @@
                                                   }
                                                   [self.testResults setObject:bidders forKey:@"bidders"];
                                               }
+                                          } else {
+                                              [self.testResults setObject:[NSNumber numberWithInteger:httpResponse.statusCode] forKey:@"responseStatus"];
+                                              [self.testResults setObject:responseString forKey:@"error"];
                                           }
                                           completionHandler();
                                       }];

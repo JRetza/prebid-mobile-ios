@@ -15,7 +15,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.3</string>
+	<string>1.4</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSApplicationCategoryType</key>
@@ -30,7 +30,11 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>$(PRODUCT_NAME) camera use</string>
+	<string>to capture the QR codes </string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>for sending location for ad filtering</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>for sending location for ad filtering</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Screengrab for validation purpose</string>
 	<key>NSPhotoLibraryUsageDescription</key>
