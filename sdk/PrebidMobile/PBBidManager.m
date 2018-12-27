@@ -526,8 +526,6 @@ static dispatch_once_t onceToken;
     
     NSMutableSet<PBAdUnit *> * adunits = [[PBBidManager sharedInstance] getRegisteredAdUnits];
     for(PBAdUnit* adunit  in adunits){
-        NSMutableDictionary *placementDict = [[NSMutableDictionary alloc] init];
-        placementDict[@"sizes"] = [self gatherSizes:adunit];
         [placementsArr addObject:[self gatherSizes:adunit]];
     }
     return placementsArr;
