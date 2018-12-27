@@ -36,6 +36,28 @@ static NSTimeInterval const kDefaultBidExpiryTime = 270;
     return (newBidResponse);
 }
 
++ (nonnull instancetype)bidResponseWithAdUnitId2:(nonnull NSString *)adUnitId
+                              adServerTargeting:(nonnull NSDictionary<NSString *,NSString *> *)adServerTargeting
+                                          bidder:(nonnull NSString *)bidder
+                                           price:(double) price
+                                           width:(long) width
+                                          height:(long)height
+                                    responseTime:(long) responseTime
+                                         cacheId:(nonnull NSString *)cacheId
+
+{
+    PBBidResponse *newBidResponse = [[PBBidResponse alloc] initWithAdUnitId:adUnitId
+                                                          adServerTargeting:adServerTargeting
+                                                                     bidder:bidder
+                                                                      price:price
+                                                                      width:width
+                                                                     height:height
+                                                               responseTime:responseTime
+                                                                    cacheId:cacheId
+                                     ];
+    return (newBidResponse);
+}
+
 #pragma mark Instance Methods
 
 - (nonnull instancetype)initWithAdUnitId:(nonnull NSString *)adUnitId
@@ -49,6 +71,33 @@ static NSTimeInterval const kDefaultBidExpiryTime = 270;
         _createdTime = [[NSDate date] timeIntervalSince1970];
     }
 
+    return (self);
+}
+
+- (nonnull instancetype)initWithAdUnitId:(nonnull NSString *)adUnitId
+                       adServerTargeting:(nonnull NSDictionary<NSString *,NSString *> *)adServerTargeting
+                                  bidder:(nonnull NSString *)bidder
+                                   price:(double) price
+                                   width:(long) width
+                                  height:(long)height
+                            responseTime:(long) responseTime
+                                 cacheId:(nonnull NSString *)cacheId
+{
+    if ((self = [super init])) {
+        _adUnitId = [adUnitId copy];
+        _customKeywords = [adServerTargeting copy];
+        _bidder = [bidder copy];
+        _price = price;
+        _width = width;
+        _height = height;
+        _responseTime = responseTime;
+        _cacheId = cacheId;
+        
+        // Setting the default bid expiration time to be 4 minutes 30 seconds
+        _timeToExpireAfter = kDefaultBidExpiryTime;
+        _createdTime = [[NSDate date] timeIntervalSince1970];
+    }
+    
     return (self);
 }
 

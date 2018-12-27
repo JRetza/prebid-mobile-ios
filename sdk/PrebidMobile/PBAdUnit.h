@@ -53,6 +53,10 @@ typedef NS_ENUM(NSInteger, PBAdUnitType) {
     PBAdUnitTypeNative
 };
 
+@property (nonatomic) BOOL isDefault;
+@property (nonatomic) NSString * lineItemId;
+@property (nonatomic) NSString * creativeId;
+
 @property (nonatomic, readonly) PBAdUnitType adType;
 
 /**

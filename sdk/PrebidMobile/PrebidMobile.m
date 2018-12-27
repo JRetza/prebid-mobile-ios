@@ -60,10 +60,10 @@
     [[PBBidManager sharedInstance] adUnitReceivedDefault:adView];
 }
 + (void) adUnitReceivedAppEvent: (UIView *)adView
-                andWithInstuction:(NSString*)instrunction
+                andWithInstruction:(NSString*)instruction
                andWithParameter:(NSString*)prm{
     [[PBBidManager sharedInstance] adUnitReceivedAppEvent:adView
-                                        andWithInstuction:instrunction
+                                        andWithInstruction:instruction
                                          andWithParameter:prm];
 }
 

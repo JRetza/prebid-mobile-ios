@@ -32,11 +32,29 @@
  */
 @property (nonatomic, assign) NSTimeInterval timeToExpireAfter;
 
+@property (nonatomic) NSString * bidder;
+@property (nonatomic) double price;
+@property (nonatomic) long width;
+@property (nonatomic) long height;
+@property (nonatomic) long responseTime;
+@property (nonatomic) int responseType;
+@property (nonatomic) BOOL won;
+@property (nonatomic) NSString * cacheId;
+
 /**
  * initialize method is to create BidResponse Object with the hbpb, cacheId, & adUnitId.
  */
 + (nonnull instancetype)bidResponseWithAdUnitId:(nonnull NSString *)adUnitId
                               adServerTargeting:(nonnull NSDictionary<NSString *, NSString *> *)adServerTargeting;
+
++ (nonnull instancetype)bidResponseWithAdUnitId2:(nonnull NSString *)adUnitId
+                               adServerTargeting:(nonnull NSDictionary<NSString *,NSString *> *)adServerTargeting
+                                          bidder:(nonnull NSString *)bidder
+                                           price:(double) price
+                                           width:(long) width
+                                          height:(long)height
+                                    responseTime:(long) responseTime
+                                         cacheId:(nonnull NSString *)cacheId;
 
 /**
  * all the server response json objects are added as dictionary objects to the bid response object

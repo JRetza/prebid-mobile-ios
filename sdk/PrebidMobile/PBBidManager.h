@@ -82,7 +82,7 @@ typedef NS_ENUM(NSInteger, PBPrimaryAdServerType) {
 
 - (void) adUnitReceivedDefault:(UIView *)adView;
 - (void) adUnitReceivedAppEvent: (UIView *)adView
-              andWithInstuction:(NSString*)instrunction
+              andWithInstruction:(NSString*)instruction
                andWithParameter:(NSString*)prm;
 
 

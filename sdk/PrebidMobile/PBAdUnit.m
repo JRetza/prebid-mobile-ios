@@ -22,7 +22,6 @@
 @property (nonatomic, readwrite, strong) NSString *__nonnull identifier;
 @property (nonatomic, readwrite, strong) NSString *__nonnull configId;
 @property (nonatomic, readwrite, strong) NSMutableArray<CGSize> *__nullable adSizes;
-
 @property (nonatomic, assign) PBAdUnitType adType;
 @property (nonatomic, assign) NSTimeInterval timeToExpireAllBids;
 

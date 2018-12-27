@@ -23,6 +23,7 @@
 #import "PBKeywordsManager.h"
 #import "PBLogging.h"
 #import "PBServerAdapter.h"
+#include <math.h>
 
 static NSTimeInterval const kBidExpiryTimerInterval = 30;
 
@@ -31,11 +32,13 @@ static NSTimeInterval const kBidExpiryTimerInterval = 30;
 @property id<PBBidResponseDelegate> delegate;
 - (void)saveBidResponses:(nonnull NSArray<PBBidResponse *> *)bidResponse;
 
+@property (nonnull) NSString* accountId;
 @property (nonatomic, assign) NSTimeInterval topBidExpiryTime;
 @property (nonatomic, strong) PBServerAdapter *demandAdapter;
 
 @property (nonatomic, strong) NSMutableSet<PBAdUnit *> *adUnits;
 @property (nonatomic, strong) NSMutableDictionary <NSString *, NSMutableArray<PBBidResponse *> *> *__nullable bidsMap;
+
 
 @property (nonatomic, assign) PBPrimaryAdServerType adServer;
 
@@ -90,6 +93,7 @@ static dispatch_once_t onceToken;
         _adUnits = [[NSMutableSet alloc] init];
     }
     _bidsMap = [[NSMutableDictionary alloc] init];
+    self.accountId = accountId;
     
     self.adServer = adServer;
     
@@ -100,6 +104,10 @@ static dispatch_once_t onceToken;
     }
     //[self startPollingBidsExpiryTimer]; //Disable automatic pulling for new Bids
     [self requestBidsForAdUnits:adUnits];
+}
+
+- (NSMutableSet<PBAdUnit *> *) getRegisteredAdUnits {
+    return self.adUnits;
 }
 
 - (nullable PBAdUnit *)adUnitByIdentifier:(nonnull NSString *)identifier {
@@ -223,7 +231,7 @@ static dispatch_once_t onceToken;
     for (PBAdUnit *adUnit in adUnitsToRemove) {
         [_adUnits removeObject:adUnit];
     }
-
+    
     // Finish registration of ad unit by adding it to adUnits
     [_adUnits addObject:adUnit];
     PBLogDebug(@"AdUnit %@ is registered with Prebid Mobile", adUnit.identifier);
@@ -244,7 +252,7 @@ static dispatch_once_t onceToken;
         PBBidResponse *bid = (PBBidResponse *)bidResponses[0];
         NSLog(@"set _bidsMap");
         [_bidsMap setObject:[bidResponses mutableCopy] forKey:bid.adUnitId];
-
+        
         // TODO: if prebid server returns expiry time for bids we need to change this implementation
         NSTimeInterval timeToExpire = bid.timeToExpireAfter + [[NSDate date] timeIntervalSince1970];
         PBAdUnit *adUnit = [self adUnitByIdentifier:bid.adUnitId];
@@ -301,8 +309,8 @@ static dispatch_once_t onceToken;
 }
 
 - (void)setBidOnAdObject:(NSObject *)adObject {
-   
-
+    
+    
     if (adObject.pb_identifier) {
         
         [self clearBidOnAdObject:adObject];
@@ -374,33 +382,40 @@ static dispatch_once_t onceToken;
     }
 }
 - (void) adUnitReceivedDefault: (UIView *)adView {
-    //TODO: implement
     NSLog(@"adUnitReceivedDefault");
+    PBAdUnit *adUnit = adView.pb_identifier;
+    adUnit.isDefault = YES;
 }
 - (void) adUnitReceivedAppEvent: (UIView *)adView
-                               andWithInstuction:(NSString*)instrunction
-                               andWithParameter:(NSString*)prm {
-    //TODO: implement
-    if([instrunction isEqualToString: @"deliveryData"]){
+              andWithInstruction:(NSString*)instruction
+               andWithParameter:(NSString*)prm {
+    if([instruction isEqualToString: @"deliveryData"]){
         NSArray* items = [prm componentsSeparatedByString:@"|"];
         NSString* lineItemId = nil;
         NSString* creativeId = nil;
         if(items.count==2){
             lineItemId = items[0];
             creativeId = items[1];
+            PBAdUnit *adUnit = adView.pb_identifier;
+            adUnit.lineItemId = lineItemId;
+            adUnit.creativeId = creativeId;
         }
-    }else if([instrunction isEqualToString: @"wonHB"]){
-        NSString* cacheWonId = prm;
+    }else if([instruction isEqualToString: @"wonHB"]){
+        PBAdUnit *adUnit = adView.pb_identifier;
+        for (PBBidResponse* bid in _bidsMap[adUnit.identifier]){
+            if ([bid.cacheId isEqualToString:prm]) {
+                bid.won = YES;
+            }
+        }
     }
 }
 
-- (void)trackStats:(const char *)statsChr{
+- (void)trackStats:(NSData *)statsJson{
     NSMutableURLRequest *mutableRequest = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:@"https://tagmans3.adsolutions.com/log/"]
                                                                        cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
                                                                    timeoutInterval:1000];
     [mutableRequest setHTTPMethod:@"POST"];
-    NSData* statsData = [NSData dataWithBytes:statsChr length:strlen(statsChr)];
-    [mutableRequest setHTTPBody:statsData];
+    [mutableRequest setHTTPBody:statsJson];
     
     
     [NSURLConnection sendAsynchronousRequest:mutableRequest
@@ -414,52 +429,172 @@ static dispatch_once_t onceToken;
 
 
 - (void) gatherStats{
-#define QUOTE(...) #__VA_ARGS__
-    const char *postJSON = QUOTE(
-                                 {
-                                     "client": 0,
-                                     "screenWidth": 0,
-                                     "screenHeight": 0,
-                                     "viewWidth": 0,
-                                     "viewHeight": 0,
-                                     "language": "nl",
-                                     "host": "demoAppI",
-                                     "page": "/home",
-                                     "proto": "https:",
-                                     "timeToLoad": 0,
-                                     "timeToPlacement": 0,
-                                     "duration": 0,
-                                     "placements": [
-                                                    {
-                                                        "sizes": [
-                                                                  {
-                                                                      "id": 0,
-                                                                      "isDefault": false,
-                                                                      "viaAdserver": true,
-                                                                      "active": true,
-                                                                      "prebid": {
-                                                                          "tiers": [
-                                                                                    {
-                                                                                        "id": 0,
-                                                                                        "bids": [
-                                                                                                 {
-                                                                                                     "bidder": "appnexus",
-                                                                                                     "won": true,
-                                                                                                     "cpm": 25,
-                                                                                                     "time": 10,
-                                                                                                     "size": "320x50",
-                                                                                                     "state": 1
-                                                                                                 }
-                                                                                                 ]
-                                                                                    }
-                                                                                    ]
-                                                                      }
-                                                                  }
-                                                                  ]
-                                                    }
-                                                    ]
-                                 }
-                                  );
-    [self trackStats:postJSON];
+    NSMutableDictionary *statsDict = [[NSMutableDictionary alloc] init];
+    
+    int height = [UIScreen mainScreen].bounds.size.height;
+    int width = [UIScreen mainScreen].bounds.size.width;
+    NSString *language = [[NSLocale preferredLanguages] objectAtIndex:0];
+    
+    statsDict[@"client"] = self.accountId;
+    statsDict[@"host"] = @"demoapp";
+    statsDict[@"page"] = @"/home";
+    statsDict[@"proto"] = @"https:";
+    statsDict[@"duration"] = @(0);
+    statsDict[@"screenWidth"] = @(width);
+    statsDict[@"screenHeight"] = @(height);
+    statsDict[@"language"] = language;
+    
+    
+    //NSLog(@"%@", language);
+    //NSString *message = [[NSString alloc]initWithFormat:@"This screen is \n\n%i pixels high and\n%i pixels wide", height, width];
+    //NSLog(@"%@", message);
+    //NSLog(@"%i", height);
+    
+    //TODO:
+    /*
+     
+     "viewWidth": 1440,
+     "viewHeight": 900,
+     "language": "en-US",
+     "timeToLoad": 3773,
+     "timeToPlacement": 116,
+     "duration": 11785,
+     
+     */
+    statsDict[@"placements"] = [self gatherPlacements];
+    /*#define QUOTE(...) #__VA_ARGS__
+     const char *postJSON = QUOTE(
+     {
+     "client": 0,
+     "screenWidth": 0,
+     "screenHeight": 0,
+     "viewWidth": 0,
+     "viewHeight": 0,
+     "language": "nl",
+     "host": "demoAppI",
+     "page": "/home",
+     "proto": "https:",
+     "timeToLoad": 0,
+     "timeToPlacement": 0,
+     "duration": 0,
+     "placements": [
+     {
+     "sizes": [
+     {
+     "id": 0,
+     "isDefault": false,
+     "viaAdserver": true,
+     "active": true,
+     "prebid": {
+     "tiers": [
+     {
+     "id": 0,
+     "bids": [
+     {
+     "bidder": "appnexus",
+     "won": true,
+     "cpm": 25,
+     "time": 10,
+     "size": "320x50",
+     "state": 1
+     }
+     ]
+     }
+     ]
+     }
+     }
+     ]
+     }
+     ]
+     }
+     );*/
+    
+    
+    NSError *error;
+    NSData *Json = [NSJSONSerialization dataWithJSONObject:statsDict
+                                                options:kNilOptions
+                                                  error:&error];
+    if (error) {
+        PBLogError(@"Error parsing ad server response");
+        return;
+    }
+    [self trackStats:Json];
 }
+
+- (NSMutableArray *) gatherPlacements{
+    NSMutableArray *placementsArr = [[NSMutableArray alloc] init];
+    
+    NSMutableSet<PBAdUnit *> * adunits = [[PBBidManager sharedInstance] getRegisteredAdUnits];
+    for(PBAdUnit* adunit  in adunits){
+        NSMutableDictionary *placementDict = [[NSMutableDictionary alloc] init];
+        placementDict[@"sizes"] = [self gatherSizes:adunit];
+        [placementsArr addObject:[self gatherSizes:adunit]];
+    }
+    return placementsArr;
+}
+
+
+- (NSDictionary *) gatherSizes:(PBAdUnit*) adunit{
+    NSMutableDictionary *sizesDict = [[NSMutableDictionary alloc] init];
+    NSMutableArray *sizesArr = [[NSMutableArray alloc] init];
+    sizesDict[@"sizes"] = sizesArr;
+    [sizesArr addObject:[self gatherSize: adunit]];
+    
+    
+    /*
+     "adserver": {
+     "id": 6410270,
+     "name": "AppNexus"
+     },
+     "active": true,
+     "viaAdserver": false,
+     "secure": 0,
+     "renderedSize": "300x250",
+     "isDefault": false,
+     "timeToLoad": 1937,
+     "visibilityP": 1000,
+     "visibilityD": 9,
+     */
+    return sizesDict;
+}
+
+- (NSDictionary *) gatherSize:(PBAdUnit*) adunit{
+    NSMutableDictionary *sizeDict = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *prebidDict = [[NSMutableDictionary alloc] init];
+    NSMutableArray *tiersArr = [[NSMutableArray alloc] init];
+    NSMutableDictionary *tierDict = [[NSMutableDictionary alloc] init];
+    NSMutableArray *bidsArr = [[NSMutableArray alloc] init];
+    
+    sizeDict[@"id"] = @(0);
+    sizeDict[@"isDefault"] = @(adunit.isDefault);
+    sizeDict[@"viaAdserver"] = @(true);
+    sizeDict[@"active"] = @(true);
+    sizeDict[@"prebid"] = prebidDict;
+    
+    prebidDict[@"tiers"] = tiersArr;
+    [tiersArr addObject:tierDict];
+    
+    tierDict[@"id"] = @(0);
+    tierDict[@"bids"] = bidsArr;
+    
+    
+    for (PBBidResponse* bid in _bidsMap[adunit.identifier]){
+        [bidsArr addObject:[self gatherBid:bid]];
+    }
+    return sizeDict;
+}
+
+- (NSDictionary *) gatherBid:(PBBidResponse*) bid {
+    NSMutableDictionary *bidDict = [[NSMutableDictionary alloc] init];
+    bidDict[@"bidder"] = bid.bidder;
+    long cpm = round(bid.price*1000);
+    bidDict[@"cpm"] = @(cpm);
+    bidDict[@"size"] = [NSString stringWithFormat:@"%lux%lu",bid.width , bid.height];
+    bidDict[@"time"] = @(bid.responseTime);
+    bidDict[@"won"] = @(bid.won);
+    bidDict[@"origCPM"] = nil;
+    
+    return bidDict;
+}
+
 @end

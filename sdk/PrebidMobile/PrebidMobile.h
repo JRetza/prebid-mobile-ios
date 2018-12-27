@@ -51,7 +51,7 @@
 + (void) shouldLoadOverSecureConnection:(BOOL) secureConnection;
 + (void) adUnitReceivedDefault: (UIView *)adView;
 + (void) adUnitReceivedAppEvent: (UIView *)adView
-              andWithInstuction:(NSString*)instrunction
+              andWithInstruction:(NSString*)instruction
                andWithParameter:(NSString*)prm;
 
 + (void) gatherStats;

@@ -42,6 +42,7 @@ didFailToReceiveAdWithError:(GADRequestError *)error {
     NSLog(@"adView:didFailToReceiveAdWithError: %@", [error localizedDescription]);
     if(error.code == kGADErrorNoFill){
         [PrebidMobile adUnitReceivedDefault:(UIView*) adView];
+        //[PrebidMobile gatherStats]; //TODO: find good location for this
     }
 }
 
@@ -71,7 +72,7 @@ didFailToReceiveAdWithError:(GADRequestError *)error {
     didReceiveAppEvent:(NSString *)name
     withInfo:(NSString *)info {
     NSLog(@"received banner event ");
-    [PrebidMobile adUnitReceivedAppEvent:banner andWithInstuction:name andWithParameter:info];
+    [PrebidMobile adUnitReceivedAppEvent:banner andWithInstruction:name andWithParameter:info];
 }
 
 @end

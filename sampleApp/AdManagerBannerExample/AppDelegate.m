@@ -26,7 +26,7 @@
     
     
     [PrebidMobile registerAdUnits:@[adUnit1]
-                    withAccountId:@"12345"
+                    withAccountId:@"0"
                          withHost:PBServerHostAdsolutions
                andPrimaryAdServer:PBPrimaryAdServerDFP];
     

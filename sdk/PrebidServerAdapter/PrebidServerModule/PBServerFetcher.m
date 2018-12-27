@@ -102,6 +102,19 @@
                                 }
                                 [adUnitBids addObject:bidDict];
                                 [adUnitToBidsMap setObject:adUnitBids forKey:bidDict[@"impid"]];
+                                
+                                if ([[response objectForKey:@"ext"] isKindOfClass:[NSDictionary class]]) {
+                                    NSDictionary *ext = (NSDictionary *)[response objectForKey:@"ext"];
+                                    if ([[ext objectForKey:@"responsetimemillis"] isKindOfClass:[NSDictionary class]]) {
+                                        NSDictionary *responsetimemillis= (NSDictionary *)[ext objectForKey:@"responsetimemillis"];
+                                        
+                                        if ([[responsetimemillis objectForKey:[seatbid objectForKey:@"seat"]] isKindOfClass:[NSNumber class]]) {
+                                            [bidDict setObject:responsetimemillis[[seatbid objectForKey:@"seat"]] forKey:@"responsetime"];
+                                        }
+                                    }
+                                    
+                                    
+                                }
                             }
                         }
                     }
@@ -109,6 +122,7 @@
             }
         }
     }
+    
     return adUnitToBidsMap;
 }
 
