@@ -138,14 +138,42 @@ static dispatch_once_t onceToken;
     if (bids) {
         PBLogDebug(@"Bids available to create keywords");
         NSMutableDictionary<NSString *, NSString *> *keywords = [[NSMutableDictionary alloc] init];
-        for (PBBidResponse *bidResp in bids) {
-            [keywords addEntriesFromDictionary:bidResp.customKeywords];
-        }
+        //for (PBBidResponse *bidResp in bids) {
+          //  [keywords addEntriesFromDictionary:bidResp.customKeywords];
+        //}
+        NSArray * sortedBids = [bids sortedArrayUsingFunction:sortBids context:NULL];
+        PBBidResponse* winner = sortedBids[0];
+        NSString* prefix = @"pb_";
+        keywords[[NSString stringWithFormat:@"%@winner", prefix]] = winner.bidder;
+        long cpm = round(winner.price*1000);
+        keywords[[NSString stringWithFormat:@"%@cpm", prefix]] = [NSString stringWithFormat:@"%lu", cpm];
+        keywords[[NSString stringWithFormat:@"%@size", prefix]] = [NSString stringWithFormat:@"%lux%lu", winner.width, winner.height];
+        keywords[@"hb_size"] = keywords[[NSString stringWithFormat:@"%@size", prefix]] ;
+        keywords[@"hb_env"] = @"mobile-app";
+        keywords[@"hb_cache_id"] = winner.cacheId;
+        keywords[@"hb_format"] = @"html";
+        
+        [keywords addEntriesFromDictionary:winner.customKeywords];
+        
+        
+        
         return keywords;
     }
     PBLogDebug(@"No bid available to create keywords");
     return nil;
 }
+
+NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
+    double v1 = bidL.price;
+    double v2 = bidR.price;
+    if (v1 > v2)
+        return NSOrderedAscending;
+    else if (v1 < v2)
+        return NSOrderedDescending;
+    else
+        return NSOrderedSame;
+}
+
 
 - (NSDictionary *)addPrebidParameters:(NSDictionary *)requestParameters
                          withKeywords:(NSDictionary *)keywordsPairs {
