@@ -20,7 +20,15 @@
   
     [PrebidMobile setBidKeywordsOnAdObject:self.bannerView withAdUnitId:@"test-imp-id" withTimeout:1000 completionHandler:^{
         [self.bannerView loadRequest:[DFPRequest request]];
-    }];}
+    }];
+    
+}
+
+- (IBAction)Button:(UIButton *)sender {
+    [PrebidMobile setBidKeywordsOnAdObject:self.bannerView withAdUnitId:@"test-imp-id" withTimeout:1000 completionHandler:^{
+        [self.bannerView loadRequest:[DFPRequest request]];
+    }];
+}
 
 - (void)didReceiveMemoryWarning {
   [super didReceiveMemoryWarning];

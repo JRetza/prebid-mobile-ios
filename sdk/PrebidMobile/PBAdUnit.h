@@ -57,6 +57,8 @@ typedef NS_ENUM(NSInteger, PBAdUnitType) {
 @property (nonatomic) NSString * lineItemId;
 @property (nonatomic) NSString * creativeId;
 
+@property (atomic) BOOL isRequesting;
+
 @property (nonatomic, readonly) PBAdUnitType adType;
 
 /**
@@ -95,5 +97,8 @@ typedef NS_ENUM(NSInteger, PBAdUnitType) {
  * two ad units are considered equal if their identifiers are equal
  */
 - (BOOL)isEqualToAdUnit:(nonnull PBAdUnit *)otherAdUnit;
+
+- (void)reset;
+
 
 @end

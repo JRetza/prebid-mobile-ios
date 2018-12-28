@@ -75,4 +75,10 @@
     return [self.identifier isEqualToString:otherAdUnit.identifier];
 }
 
+- (void)reset {
+    _isDefault = NO;
+    _lineItemId = nil;
+    _creativeId = nil;
+}
+
 @end

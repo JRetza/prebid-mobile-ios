@@ -86,6 +86,10 @@ static int const kBatchCount = 10;
         adUnitsRemaining-=range.length;
         j+=range.length;
         
+        for(PBAdUnit* au in adUnits){
+            au.isRequesting = true;
+        }
+        
         NSURLRequest *request = [[PBServerRequestBuilder sharedInstance] buildRequest:subAdUnitArray withAccountId:self.accountId withSecureParams:self.isSecure];
         
         [[PBServerFetcher sharedInstance] makeBidRequest:request withCompletionHandler:^(NSDictionary *adUnitToBidsMap, NSError *error) {
@@ -94,6 +98,8 @@ static int const kBatchCount = 10;
                 [delegate didCompleteWithError:error];
                 return;
             }
+            
+            
             for (NSString *adUnitId in [adUnitToBidsMap allKeys]) {
                 NSArray *bidsArray = (NSArray *)[adUnitToBidsMap objectForKey:adUnitId];
                 NSMutableArray *bidResponsesArray = [[NSMutableArray alloc] init];
@@ -128,9 +134,13 @@ static int const kBatchCount = 10;
                     } else {
                         [delegate didReceiveSuccessResponse:bidResponsesArray];
                     }
+                    for(PBAdUnit* au in subAdUnitArray){
+                        au.isRequesting = false;
+                    }
                 } else {
                     NSLog(@"start cache");
                     [[PrebidCache globalCache] cacheContents:contentsToCache forAdserver:self.primaryAdServer withCompletionBlock:^(NSError * error, NSArray *cacheIds) {
+                        
                         if(!error) {
                             for (int i = 0; i< bidsArray.count; i++) {
                                 NSMutableDictionary *adServerTargetingCopy = [bidsArray[i][@"ext"][@"prebid"][@"targeting"] mutableCopy];
@@ -159,6 +169,10 @@ static int const kBatchCount = 10;
                             [delegate didReceiveSuccessResponse:bidResponsesArray];;
                         } else {
                             [delegate didCompleteWithError:error];
+                        }
+                        
+                        for(PBAdUnit* au in adUnits){
+                            au.isRequesting = false;
                         }
                     }];
                 }

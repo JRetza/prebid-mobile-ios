@@ -53,6 +53,7 @@ static NSTimeInterval const kBidExpiryTimerInterval = 30;
 @implementation PBBidResponseDelegateImplementation
 
 - (void)didReceiveSuccessResponse:(nonnull NSArray<PBBidResponse *> *)bids {
+    
     [[PBBidManager sharedInstance] saveBidResponses:bids];
 }
 
@@ -133,7 +134,7 @@ static dispatch_once_t onceToken;
     NSArray *bids = [self getBids:adUnit];
     if(!bids || [bids count]==0){
         [self resetAdUnit:adUnit];
-        [self requestBidsForAdUnits:@[adUnit]];
+        //[self requestBidsForAdUnits:@[adUnit]];
     }
     if (bids) {
         PBLogDebug(@"Bids available to create keywords");
@@ -155,7 +156,10 @@ static dispatch_once_t onceToken;
         
         [keywords addEntriesFromDictionary:winner.customKeywords];
         
-        
+        for (PBBidResponse *bidResp in bids) {
+            bidResp.sendToAdserver = YES;
+            
+        }
         
         return keywords;
     }
@@ -209,6 +213,11 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     if (timeoutInMS > kPCAttachTopBidMaxTimeoutMS) {
         timeoutInMS = kPCAttachTopBidMaxTimeoutMS;
     }
+    
+    [self assertNoBidsSendToAdserverAndScheduleNewBidsWhenNeeded:adUnitIdentifier];
+    
+    
+    
     if ([self isBidReady:adUnitIdentifier]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             PBLogDebug(@"Calling completionHandler on attachTopBidWhenReady isBidReady");
@@ -231,6 +240,25 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
             PBLogDebug(@"Attempting to attach cached bid for ad unit %@", adUnitIdentifier);
             PBLogDebug(@"Calling completionHandler on attachTopBidWhenReady bids not ready");
             handler();
+        }
+    }
+}
+
+- (void) assertNoBidsSendToAdserverAndScheduleNewBidsWhenNeeded:(nonnull NSString *)adUnitIdentifier {
+    for (long i = [_bidsMap[adUnitIdentifier] count]-1; i>=0; i--){
+        PBBidResponse*bid = _bidsMap[adUnitIdentifier][i];
+        if(bid.sendToAdserver == YES){
+            [_bidsMap[adUnitIdentifier] removeObjectAtIndex:i];
+        }
+    }
+    if([_bidsMap[adUnitIdentifier] count] == 0){
+        PBAdUnit * adUnit = [self adUnitByIdentifier:adUnitIdentifier];
+        NSLog(@"checking if it's needed to request new bids : %d",adUnit.isRequesting);
+        if(!adUnit.isRequesting){
+            [adUnit generateUUID];
+            [adUnit reset];
+            //[self resetAdUnit:adUnit];
+            [self requestBidsForAdUnits:@[adUnit]];
         }
     }
 }
@@ -271,6 +299,7 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
 
 - (void)resetAdUnit:(PBAdUnit *)adUnit {
     [adUnit generateUUID];
+    [adUnit reset];
     [_bidsMap removeObjectForKey:adUnit.identifier];
     NSLog(@"reset _bidsMap");
 }
@@ -284,6 +313,7 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
         // TODO: if prebid server returns expiry time for bids we need to change this implementation
         NSTimeInterval timeToExpire = bid.timeToExpireAfter + [[NSDate date] timeIntervalSince1970];
         PBAdUnit *adUnit = [self adUnitByIdentifier:bid.adUnitId];
+        adUnit.isRequesting = NO;
         [adUnit setTimeIntervalToExpireAllBids:timeToExpire];
     }
 }
