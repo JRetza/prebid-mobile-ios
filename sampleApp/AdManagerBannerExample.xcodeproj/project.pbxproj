@@ -323,6 +323,8 @@
 				INFOPLIST_FILE = "$(SRCROOT)/AdManagerBannerExample/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = "-ObjC";
+				"OTHER_LDFLAGS[arch=*]" = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.adsolutions.example.AdManagerBannerExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -341,6 +343,8 @@
 				INFOPLIST_FILE = "$(SRCROOT)/AdManagerBannerExample/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_LDFLAGS = "-ObjC";
+				"OTHER_LDFLAGS[arch=*]" = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.adsolutions.example.AdManagerBannerExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
