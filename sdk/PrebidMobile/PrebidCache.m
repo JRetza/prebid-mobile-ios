@@ -183,10 +183,11 @@ static NSString *const kPBAppTransportSecurityAllowsArbitraryLoadsKey = @"NSAllo
                     [webView reload];
                 }
             }];*/
-            //dispatch_async(dispatch_get_main_queue(), ^{
-            [self finishAndChangeState];
-            //});
+            
         }
+        //dispatch_async(dispatch_get_main_queue(), ^{
+        [self finishAndChangeState];
+        //});
     }
     else {
         [self finishAndChangeState];
