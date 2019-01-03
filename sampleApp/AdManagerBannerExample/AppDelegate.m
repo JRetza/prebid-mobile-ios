@@ -28,9 +28,11 @@
     [PrebidMobile registerAdUnits:@[adUnit1]
                     withAccountId:@"0"
                          withHost:PBServerHostAdsolutions
-               andPrimaryAdServer:PBPrimaryAdServerDFP];
+               andPrimaryAdServer:PBPrimaryAdServerDFP
+                      withAppName:@"demoAppI"
+     ];
     
-    
+    [PrebidMobile setAppPage:@"/home"];
     
     return YES;
 }

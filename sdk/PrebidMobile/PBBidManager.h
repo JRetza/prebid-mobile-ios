@@ -44,7 +44,11 @@ typedef NS_ENUM(NSInteger, PBPrimaryAdServerType) {
 - (void)registerAdUnits:(nonnull NSArray<PBAdUnit *> *)adUnits
           withAccountId:(nonnull NSString *)accountId
                withHost:(PBServerHost)host
-     andPrimaryAdServer:(PBPrimaryAdServerType)adServer;
+     andPrimaryAdServer:(PBPrimaryAdServerType)adServer
+            withAppName:(nonnull NSString *)appName;
+
+-(void) setAppPage:(NSString*) appPage;
+
 
 /**
  * Returns the ad unit for the string identifier

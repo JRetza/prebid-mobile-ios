@@ -21,8 +21,13 @@
 + (void)registerAdUnits:(nonnull NSArray<PBAdUnit *> *)adUnits
           withAccountId:(nonnull NSString *)accountId
                withHost:(PBServerHost)host
-     andPrimaryAdServer:(PBPrimaryAdServerType)adServer {
-    [[PBBidManager sharedInstance] registerAdUnits:adUnits withAccountId:accountId withHost:host andPrimaryAdServer:adServer];
+     andPrimaryAdServer:(PBPrimaryAdServerType)adServer
+            withAppName:(nonnull NSString *) appName{
+    [[PBBidManager sharedInstance] registerAdUnits:adUnits withAccountId:accountId withHost:host andPrimaryAdServer:adServer withAppName:appName];
+}
+
++ (void) setAppPage:(NSString *)appPage{
+    [[PBBidManager sharedInstance] setAppPage:appPage];
 }
 
 + (void)setBidKeywordsOnAdObject:(nonnull id)adObject

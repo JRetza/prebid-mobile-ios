@@ -33,6 +33,9 @@ static NSTimeInterval const kBidExpiryTimerInterval = 30;
 - (void)saveBidResponses:(nonnull NSArray<PBBidResponse *> *)bidResponse;
 
 @property (nonnull) NSString* accountId;
+@property (nonnull) NSString* appName;
+@property (nonatomic) NSString* appPage;
+
 @property (nonatomic, assign) NSTimeInterval topBidExpiryTime;
 @property (nonatomic, strong) PBServerAdapter *demandAdapter;
 
@@ -41,6 +44,7 @@ static NSTimeInterval const kBidExpiryTimerInterval = 30;
 
 
 @property (nonatomic, assign) PBPrimaryAdServerType adServer;
+
 
 @end
 
@@ -89,13 +93,15 @@ static dispatch_once_t onceToken;
 - (void)registerAdUnits:(nonnull NSArray<PBAdUnit *> *)adUnits
           withAccountId:(nonnull NSString *)accountId
                withHost:(PBServerHost)host
-     andPrimaryAdServer:(PBPrimaryAdServerType)adServer {
+     andPrimaryAdServer:(PBPrimaryAdServerType)adServer
+            withAppName:(nonnull NSString *)appName{
     if (_adUnits == nil) {
         _adUnits = [[NSMutableSet alloc] init];
     }
     _bidsMap = [[NSMutableDictionary alloc] init];
     self.accountId = accountId;
-    
+    self.appName = appName;
+
     self.adServer = adServer;
     
     _demandAdapter = [[PBServerAdapter alloc] initWithAccountId:accountId andHost:host andAdServer:adServer] ;
@@ -484,7 +490,9 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     
 }
 
-
+- (void) setAppPage:(NSString *)appPage{
+    _appPage = appPage;
+}
 
 - (void) gatherStats{
     NSMutableDictionary *statsDict = [[NSMutableDictionary alloc] init];
@@ -494,19 +502,13 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     NSString *language = [[NSLocale preferredLanguages] objectAtIndex:0];
     
     statsDict[@"client"] = self.accountId;
-    statsDict[@"host"] = @"demoapp";
-    statsDict[@"page"] = @"/home";
+    statsDict[@"host"] = self.appName;
+    statsDict[@"page"] = self.appPage;
     statsDict[@"proto"] = @"https:";
     statsDict[@"duration"] = @(0);
     statsDict[@"screenWidth"] = @(width);
     statsDict[@"screenHeight"] = @(height);
     statsDict[@"language"] = language;
-    
-    
-    //NSLog(@"%@", language);
-    //NSString *message = [[NSString alloc]initWithFormat:@"This screen is \n\n%i pixels high and\n%i pixels wide", height, width];
-    //NSLog(@"%@", message);
-    //NSLog(@"%i", height);
     
     //TODO:
     /*

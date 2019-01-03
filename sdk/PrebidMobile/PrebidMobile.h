@@ -23,23 +23,21 @@
 @interface PrebidMobile : NSObject
 
 /**
- sd
- f
- \sad
- fasd
- f
- asdf
- as
  * This method allows the developer to register the ad units created for Prebid Mobile
  * @param adUnits : Array of AdUnits that can be registered
  * @param accountId : Prebid server accountId
  * @param host : Prebid server host
  * @param adServer : Primary ad server - needed to determine optimal bid caching
+ * @param appName : The name of the app - used in reporting 
  */
 + (void)registerAdUnits:(nonnull NSArray<PBAdUnit *> *)adUnits
           withAccountId:(nonnull NSString *)accountId
                withHost:(PBServerHost)host
-     andPrimaryAdServer:(PBPrimaryAdServerType)adServer;
+     andPrimaryAdServer:(PBPrimaryAdServerType)adServer
+            withAppName:(nonnull NSString *)appName
+;
+
++ (void) setAppPage:(NSString *)appPage;
 
 + (void)setBidKeywordsOnAdObject:(nonnull id)adObject withAdUnitId:(nonnull NSString *)adUnitId;
 
