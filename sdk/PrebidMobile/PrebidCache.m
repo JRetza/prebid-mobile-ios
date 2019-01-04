@@ -58,14 +58,13 @@ static NSString *const kPBAppTransportSecurityAllowsArbitraryLoadsKey = @"NSAllo
                     __strong PrebidCacheOperation *strongSelf = strongSelf;
                 long long milliseconds = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
                 NSMutableString *htmlToLoad = [[NSMutableString alloc] init];
-                //[htmlToLoad appendString:@"<html><head>"];
-                //NSString *scriptString = [NSString stringWithFormat:@"<script>debugger;console.log('blah2');/*var currentTime = %lld;var toBeDeleted = [];for(i = 0; i< localStorage.length; i ++){if(localStorage.key(i).startsWith('Prebid_')) {createdTime = localStorage.key(i).split('_')[2];if (( currentTime - createdTime) > %ld){toBeDeleted.push(localStorage.key(i));}}}for ( i = 0; i< toBeDeleted.length; i ++) {localStorage.removeItem(toBeDeleted[i]);}*/</script>", milliseconds, (long) expireCacheMilliSeconds];
-                //[htmlToLoad appendString:scriptString];
+                [htmlToLoad appendString:@"<html><head>"];
+                NSString *scriptString = [NSString stringWithFormat:@"<script>var currentTime = %lld;var toBeDeleted = [];for(i = 0; i< localStorage.length; i ++){if(localStorage.key(i).startsWith('Prebid_')) {createdTime = localStorage.key(i).split('_')[2];if (( currentTime - createdTime) > %ld){toBeDeleted.push(localStorage.key(i));}}}for ( i = 0; i< toBeDeleted.length; i ++) {localStorage.removeItem(toBeDeleted[i]);}</script>", milliseconds, (long) expireCacheMilliSeconds];
+                [htmlToLoad appendString:scriptString];
 
                 self.contents = [[NSArray alloc] init];
                 self.contents = contents;
                 
-               // [htmlToLoad appendString:@"</head><body style='background-color:green;'><img src='https://www.adsolutions.com/blah.jph'/><div id='dbg'/></body></html>"];
                [htmlToLoad appendString:@"</head><body></body></html>"];
                 self.htmlToLoad = htmlToLoad;
                 
@@ -156,9 +155,7 @@ static NSString *const kPBAppTransportSecurityAllowsArbitraryLoadsKey = @"NSAllo
         for (NSString *content in self.contents) {
             NSString *cacheId = [NSString stringWithFormat:@"Prebid_%@_%lld", [NSString stringWithFormat:@"%08X", arc4random()], milliseconds];
             NSString* setLocalStorageValue = [NSString stringWithFormat:@";localStorage.setItem('%@','%@');", cacheId, content];
-            //NSString* setLocalStorageValue2 = [NSString stringWithFormat:@"document.documentElement.appendChild(document.createElement('img')).src='https://www.adsolutions.com/blah2.jpg?//loc='+location.href+'&len='+localStorage.length+'&data=';dbg.innerHTML=localStorage.getItem('%@')", cacheId];
             [webView stringByEvaluatingJavaScriptFromString:setLocalStorageValue];
-            //[webView stringByEvaluatingJavaScriptFromString:setLocalStorageValue2];
             [self.cacheIds addObject:cacheId];
             
             /*[webView stringByEvaluatingJavaScriptFromString:setLocalStorageValue completionHandler:^(NSString* result, NSError *error) {
