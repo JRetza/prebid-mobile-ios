@@ -159,6 +159,9 @@ static dispatch_once_t onceToken;
             long cpm = round(winner.price*1000);
             keywords[[NSString stringWithFormat:@"%@cpm", prefix]] = [NSString stringWithFormat:@"%lu", cpm];
             keywords[[NSString stringWithFormat:@"%@size", prefix]] = [NSString stringWithFormat:@"%lux%lu", winner.width, winner.height];
+            if (winner.dealId != nil) {
+                keywords[[NSString stringWithFormat:@"%@deal", prefix]] = winner.dealId;
+            }
             keywords[@"hb_size"] = keywords[[NSString stringWithFormat:@"%@size", prefix]] ;
             keywords[@"hb_env"] = @"mobile-app";
             keywords[@"hb_cache_id"] = winner.cacheId;
@@ -607,6 +610,9 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     bidDict[@"won"] = @(bid.won);
     bidDict[@"origCPM"] = nil;
     bidDict[@"state"] = @(bid.responseType);
+    if (bid.dealId != nil) {
+        bidDict[@"dealId"] = bid.dealId;
+    }
     
     return bidDict;
 }

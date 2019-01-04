@@ -41,6 +41,7 @@
 @property (nonatomic) BOOL won;
 @property (nonatomic) NSString * cacheId;
 @property (nonatomic) BOOL sendToAdserver;
+@property (nonatomic) NSString * dealId;
 
 
 /**

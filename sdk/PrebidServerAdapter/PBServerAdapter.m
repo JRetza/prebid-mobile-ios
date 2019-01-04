@@ -166,6 +166,10 @@ static int const kBatchCount = 10;
                                         NSString *cacheIdkey =[ NSString stringWithFormat:@"%@_%@", kAPNAdServerCacheIdKey, bidsArray[i][@"seat"]];
                                         cacheIdkey = cacheIdkey.length > 20 ? [cacheIdkey substringToIndex:20] : cacheIdkey;
                                         adServerTargetingCopy[cacheIdkey] = bidderCacheId;
+                                        NSString * dealId;
+                                        if ([[bidsArray[i]objectForKey:@"dealid"] isKindOfClass:[NSString class]]) {
+                                            dealId = bidsArray[i][@"dealid"];
+                                        }
                                         bidResponse = [PBBidResponse bidResponseWithAdUnitId2:adUnitId
                                                                             adServerTargeting:adServerTargetingCopy
                                                                                        bidder:bidsArray[i][@"seat"]
@@ -175,6 +179,9 @@ static int const kBatchCount = 10;
                                                                                  responseTime:[bidsArray[i][@"responsetime"] longValue]
                                                                                       cacheId:bidderCacheId
                                                    ];
+                                        if (dealId != nil && [dealId length] == 0) {
+                                            bidResponse.dealId = dealId;
+                                        }
                                     }
                                     PBLogDebug(@"Bid Successful with rounded bid targeting keys are %@ for adUnit id is %@", [bidResponse.customKeywords description], adUnitId);
                                 }
