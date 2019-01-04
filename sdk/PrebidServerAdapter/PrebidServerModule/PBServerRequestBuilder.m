@@ -93,11 +93,12 @@ static NSString *const kPrebidMobileVersion = @"0.5.3";
     if (![[PBTargetingParams sharedInstance] useLocalCache]){
         requestPrebidExt[@"cache"] = @{@"bids" : [[NSMutableDictionary alloc] init]};
     }
-   // NSMutableDictionary *aliases = [[NSMutableDictionary alloc] init];
-    //aliases[@"appnexus2"] = @"appnexus";
-    //aliases[@"appnexus3"] = @"appnexus";
+   //NSMutableDictionary *aliases = [[NSMutableDictionary alloc] init];
+   //aliases[@"appnexus2"] = @"appnexus";
+   //aliases[@"appnexus3"] = @"appnexus";
     NSMutableDictionary *requestExt = [[NSMutableDictionary alloc] init];
     requestExt[@"prebid"] = requestPrebidExt;
+    
     //requestPrebidExt[@"aliases"] = aliases;
     return [requestExt copy];
 }

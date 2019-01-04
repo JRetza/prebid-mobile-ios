@@ -121,6 +121,30 @@
                 }
             }
         }
+        for (NSString* bidResults in [adUnitToBidsMap allKeys]) {
+            if ([[response objectForKey:@"ext"] isKindOfClass:[NSDictionary class]]) {
+                NSDictionary *ext = (NSDictionary *)[response objectForKey:@"ext"];
+                if ([[ext objectForKey:@"responsetimemillis"] isKindOfClass:[NSDictionary class]]) {
+                    NSDictionary *responsetimemillis= (NSDictionary *)[ext objectForKey:@"responsetimemillis"];
+                    for(NSString* bidderName in [responsetimemillis allKeys]){
+                        BOOL found = false;
+                        for (NSMutableDictionary* bid in[adUnitToBidsMap objectForKey:bidResults]) {
+                            if ([bid[@"seat"] isEqualToString:bidderName]) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if(!found){
+                            NSMutableDictionary* bidDict = [[NSMutableDictionary alloc] init];
+                            bidDict[@"seat"] = bidderName;
+                            bidDict[@"responsetime"] = [responsetimemillis valueForKey:bidderName];
+                            bidDict[@"responseType"] = @(2);
+                            [[adUnitToBidsMap objectForKey:bidResults] addObject:bidDict];
+                        }
+                    }
+                }
+            }
+        }
     }
     
     return adUnitToBidsMap;

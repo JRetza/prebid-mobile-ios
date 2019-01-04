@@ -42,6 +42,8 @@ static NSTimeInterval const kBidExpiryTimerInterval = 30;
 @property (nonatomic, strong) NSMutableSet<PBAdUnit *> *adUnits;
 @property (nonatomic, strong) NSMutableDictionary <NSString *, NSMutableArray<PBBidResponse *> *> *__nullable bidsMap;
 
+@property (nonatomic) long long lastGatherStats;
+
 
 @property (nonatomic, assign) PBPrimaryAdServerType adServer;
 
@@ -81,6 +83,7 @@ static dispatch_once_t onceToken;
 + (instancetype)sharedInstance {
     dispatch_once(&onceToken, ^{
         sharedInstance = [[self alloc] init];
+        
         [sharedInstance setDelegate:[[PBBidResponseDelegateImplementation alloc] init]];
     });
     return sharedInstance;
@@ -103,7 +106,7 @@ static dispatch_once_t onceToken;
     self.appName = appName;
 
     self.adServer = adServer;
-    
+    self.lastGatherStats = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
     _demandAdapter = [[PBServerAdapter alloc] initWithAccountId:accountId andHost:host andAdServer:adServer] ;
     
     for (id adUnit in adUnits) {
@@ -147,21 +150,22 @@ static dispatch_once_t onceToken;
         NSMutableDictionary<NSString *, NSString *> *keywords = [[NSMutableDictionary alloc] init];
         //for (PBBidResponse *bidResp in bids) {
           //  [keywords addEntriesFromDictionary:bidResp.customKeywords];
-        //}
+        //
         NSArray * sortedBids = [bids sortedArrayUsingFunction:sortBids context:NULL];
         PBBidResponse* winner = sortedBids[0];
-        NSString* prefix = @"pb_";
-        keywords[[NSString stringWithFormat:@"%@winner", prefix]] = winner.bidder;
-        long cpm = round(winner.price*1000);
-        keywords[[NSString stringWithFormat:@"%@cpm", prefix]] = [NSString stringWithFormat:@"%lu", cpm];
-        keywords[[NSString stringWithFormat:@"%@size", prefix]] = [NSString stringWithFormat:@"%lux%lu", winner.width, winner.height];
-        keywords[@"hb_size"] = keywords[[NSString stringWithFormat:@"%@size", prefix]] ;
-        keywords[@"hb_env"] = @"mobile-app";
-        keywords[@"hb_cache_id"] = winner.cacheId;
-        keywords[@"hb_format"] = @"html";
-        
-        [keywords addEntriesFromDictionary:winner.customKeywords];
-        
+        if(winner != nil){
+            NSString* prefix = @"pb_";
+            keywords[[NSString stringWithFormat:@"%@winner", prefix]] = winner.bidder;
+            long cpm = round(winner.price*1000);
+            keywords[[NSString stringWithFormat:@"%@cpm", prefix]] = [NSString stringWithFormat:@"%lu", cpm];
+            keywords[[NSString stringWithFormat:@"%@size", prefix]] = [NSString stringWithFormat:@"%lux%lu", winner.width, winner.height];
+            keywords[@"hb_size"] = keywords[[NSString stringWithFormat:@"%@size", prefix]] ;
+            keywords[@"hb_env"] = @"mobile-app";
+            keywords[@"hb_cache_id"] = winner.cacheId;
+            keywords[@"hb_format"] = @"html";
+            
+            [keywords addEntriesFromDictionary:winner.customKeywords];
+        }
         for (PBBidResponse *bidResp in bids) {
             bidResp.sendToAdserver = YES;
             
@@ -474,6 +478,11 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     }
 }
 
+- (void) markAdUnitLoaded: (UIView *)adView{
+    PBAdUnit *adUnit = adView.pb_identifier;
+    adUnit.stopLoadTime = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+}
+
 - (void)trackStats:(NSData *)statsJson{
     NSMutableURLRequest *mutableRequest = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:@"https://tagmans3.adsolutions.com/log/"]
                                                                        cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
@@ -509,71 +518,16 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     statsDict[@"screenWidth"] = @(width);
     statsDict[@"screenHeight"] = @(height);
     statsDict[@"language"] = language;
-    
-    //TODO:
-    /*
-     
-     "viewWidth": 1440,
-     "viewHeight": 900,
-     "language": "en-US",
-     "timeToLoad": 3773,
-     "timeToPlacement": 116,
-     "duration": 11785,
-     
-     */
+    long long currTime = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+    statsDict[@"duration"] = @(currTime - _lastGatherStats);
     statsDict[@"placements"] = [self gatherPlacements];
-    /*#define QUOTE(...) #__VA_ARGS__
-     const char *postJSON = QUOTE(
-     {
-     "client": 0,
-     "screenWidth": 0,
-     "screenHeight": 0,
-     "viewWidth": 0,
-     "viewHeight": 0,
-     "language": "nl",
-     "host": "demoAppI",
-     "page": "/home",
-     "proto": "https:",
-     "timeToLoad": 0,
-     "timeToPlacement": 0,
-     "duration": 0,
-     "placements": [
-     {
-     "sizes": [
-     {
-     "id": 0,
-     "isDefault": false,
-     "viaAdserver": true,
-     "active": true,
-     "prebid": {
-     "tiers": [
-     {
-     "id": 0,
-     "bids": [
-     {
-     "bidder": "appnexus",
-     "won": true,
-     "cpm": 25,
-     "time": 10,
-     "size": "320x50",
-     "state": 1
-     }
-     ]
-     }
-     ]
-     }
-     }
-     ]
-     }
-     ]
-     }
-     );*/
-    
     
     NSError *error;
     NSData *Json = [NSJSONSerialization dataWithJSONObject:statsDict
                                                 options:kNilOptions
                                                   error:&error];
+    self.lastGatherStats = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+    
     if (error) {
         PBLogError(@"Error parsing ad server response");
         return;
@@ -598,37 +552,38 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     sizesDict[@"sizes"] = sizesArr;
     [sizesArr addObject:[self gatherSize: adunit]];
     
-    
-    /*
-     "adserver": {
-     "id": 6410270,
-     "name": "AppNexus"
-     },
-     "active": true,
-     "viaAdserver": false,
-     "secure": 0,
-     "renderedSize": "300x250",
-     "isDefault": false,
-     "timeToLoad": 1937,
-     "visibilityP": 1000,
-     "visibilityD": 9,
-     */
     return sizesDict;
 }
 
 - (NSDictionary *) gatherSize:(PBAdUnit*) adunit{
     NSMutableDictionary *sizeDict = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *adserverDict = [[NSMutableDictionary alloc] init];
+    NSMutableDictionary *deliveryDict = [[NSMutableDictionary alloc] init];
     NSMutableDictionary *prebidDict = [[NSMutableDictionary alloc] init];
     NSMutableArray *tiersArr = [[NSMutableArray alloc] init];
     NSMutableDictionary *tierDict = [[NSMutableDictionary alloc] init];
     NSMutableArray *bidsArr = [[NSMutableArray alloc] init];
     
+    
     sizeDict[@"id"] = @(0);
     sizeDict[@"isDefault"] = @(adunit.isDefault);
     sizeDict[@"viaAdserver"] = @(true);
     sizeDict[@"active"] = @(true);
-    sizeDict[@"prebid"] = prebidDict;
+    sizeDict[@"timeToLoad"] = @(adunit.timeToLoad);
     
+    NSString * adunitId = [adunit.adView valueForKey:@"adUnitID"];
+    NSError *error = nil;
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^/\\d+/" options:NSRegularExpressionCaseInsensitive error:&error];
+    adunitId = [regex stringByReplacingMatchesInString:adunitId options:0 range:NSMakeRange(0, [adunitId length]) withTemplate:@""];
+    
+    adserverDict[@"name"] = @"DFP";
+    adserverDict[@"id"] = adunitId;
+    deliveryDict[@"lineitemId"] = adunit.lineItemId;
+    deliveryDict[@"creativeId"] = adunit.creativeId;
+    adserverDict[@"delivery"] = deliveryDict;
+    sizeDict[@"adserver"] = adserverDict;
+    
+    sizeDict[@"prebid"] = prebidDict;
     prebidDict[@"tiers"] = tiersArr;
     [tiersArr addObject:tierDict];
     
@@ -651,6 +606,7 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     bidDict[@"time"] = @(bid.responseTime);
     bidDict[@"won"] = @(bid.won);
     bidDict[@"origCPM"] = nil;
+    bidDict[@"state"] = @(bid.responseType);
     
     return bidDict;
 }

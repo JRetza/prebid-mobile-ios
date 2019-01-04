@@ -20,8 +20,12 @@
     
     [[PBTargetingParams sharedInstance] setLocalCache: TRUE];
     
-    
+    //PBBannerAdUnit *__nullable adUnit1 = [[PBBannerAdUnit alloc] initWithAdUnitIdentifier:@"test-imp-id" andConfigId:@"pg-i-pzc"];
+    //PBBannerAdUnit *__nullable adUnit1 = [[PBBannerAdUnit alloc] initWithAdUnitIdentifier:@"test-imp-id" andConfigId:@"pg-a-pzc"];
+    //PBBannerAdUnit *__nullable adUnit1 = [[PBBannerAdUnit alloc] initWithAdUnitIdentifier:@"test-imp-id" andConfigId:@"test-imp-empty"];
+    //PBBannerAdUnit *__nullable adUnit1 = [[PBBannerAdUnit alloc] initWithAdUnitIdentifier:@"test-imp-id" andConfigId:@"test-imp-dealid"];
     PBBannerAdUnit *__nullable adUnit1 = [[PBBannerAdUnit alloc] initWithAdUnitIdentifier:@"test-imp-id" andConfigId:@"test-imp-id"];
+    //PBBannerAdUnit *__nullable adUnit1 = [[PBBannerAdUnit alloc] initWithAdUnitIdentifier:@"test-imp-id" andConfigId:@"test-imp-id.3"];
     [adUnit1 addSize:CGSizeMake(300, 250)];
     
     

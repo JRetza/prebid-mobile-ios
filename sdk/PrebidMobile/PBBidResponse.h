@@ -42,6 +42,7 @@
 @property (nonatomic) NSString * cacheId;
 @property (nonatomic) BOOL sendToAdserver;
 
+
 /**
  * initialize method is to create BidResponse Object with the hbpb, cacheId, & adUnitId.
  */

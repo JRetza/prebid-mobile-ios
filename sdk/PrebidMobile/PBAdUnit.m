@@ -25,9 +25,13 @@
 @property (nonatomic, assign) PBAdUnitType adType;
 @property (nonatomic, assign) NSTimeInterval timeToExpireAllBids;
 
+
 @end
 
 @implementation PBAdUnit
+
+@synthesize timeToLoad = _timeToLoad;
+
 
 #pragma mark Initialization
 - (nonnull instancetype)initWithIdentifier:(nonnull NSString *)identifier andAdType:(PBAdUnitType)type andConfigId:(nonnull NSString *)configId {
@@ -79,6 +83,18 @@
     _isDefault = NO;
     _lineItemId = nil;
     _creativeId = nil;
+}
+
+- (long) timeToLoad {
+    if (_startLoadTime > 0){
+        if (_stopLoadTime < _startLoadTime) {
+            long long currTime = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+            return  currTime - _startLoadTime;
+        } else {
+            return _stopLoadTime - _startLoadTime;
+        }
+    }
+    return 0;
 }
 
 @end

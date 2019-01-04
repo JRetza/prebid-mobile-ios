@@ -23,6 +23,7 @@
                   withDelegate:(nonnull id<PBBidResponseDelegate>)delegate {
     // mock any conditions necessary for testing
     //[delegate bidSuccessful:bidResponse forAdUnit:adUnit];
+    
     NSLog(@"mock server adapter request bids called");
 }
 

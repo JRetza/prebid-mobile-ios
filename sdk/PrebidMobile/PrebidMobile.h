@@ -52,6 +52,8 @@
               andWithInstruction:(NSString*)instruction
                andWithParameter:(NSString*)prm;
 
++ (void) markAdUnitLoaded: (UIView *)adView;
+
 + (void) gatherStats;
 
 @end

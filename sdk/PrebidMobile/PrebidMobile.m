@@ -51,6 +51,17 @@
                completionHandler:(void (^)(void))handler {
     void (^completionHandler)(void) = ^{
         [self setBidKeywordsOnAdObject:adObject withAdUnitId:adUnitIdentifier];
+        SEL getPb_identifier = NSSelectorFromString(@"pb_identifier");
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        if ([adObject respondsToSelector:getPb_identifier]) {
+            PBAdUnit *adUnit = (PBAdUnit *)[adObject performSelector:getPb_identifier];
+#pragma clang diagnostic pop
+            adUnit.adView = (UIView*)adObject;
+            
+            adUnit.startLoadTime = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
+        }
+        
         handler();
     };
     [[PBBidManager sharedInstance] attachTopBidHelperForAdUnitId:adUnitIdentifier
@@ -64,6 +75,10 @@
 + (void) adUnitReceivedDefault: (UIView *)adView {
     [[PBBidManager sharedInstance] adUnitReceivedDefault:adView];
 }
++ (void) markAdUnitLoaded: (UIView *)adView {
+    [[PBBidManager sharedInstance] markAdUnitLoaded:adView];
+}
+    
 + (void) adUnitReceivedAppEvent: (UIView *)adView
                 andWithInstruction:(NSString*)instruction
                andWithParameter:(NSString*)prm{

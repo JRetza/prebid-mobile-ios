@@ -89,6 +89,8 @@ typedef NS_ENUM(NSInteger, PBPrimaryAdServerType) {
               andWithInstruction:(NSString*)instruction
                andWithParameter:(NSString*)prm;
 
+- (void) markAdUnitLoaded: (UIView *)adView;
+
 
 - (void) gatherStats;
 

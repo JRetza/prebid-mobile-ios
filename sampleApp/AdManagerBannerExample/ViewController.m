@@ -23,7 +23,7 @@
     }];
     
 }
-
+    // Sample implementation refresh button
 - (IBAction)Button:(UIButton *)sender {
     [PrebidMobile setBidKeywordsOnAdObject:self.bannerView withAdUnitId:@"test-imp-id" withTimeout:1000 completionHandler:^{
         [self.bannerView loadRequest:[DFPRequest request]];
@@ -40,7 +40,12 @@
     
     self.bannerView.backgroundColor = UIColor.whiteColor;
     
-    [PrebidMobile gatherStats]; //TODO: find good location for this
+    [PrebidMobile markAdUnitLoaded:(UIView*) adView];
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 1.5);
+    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+        [PrebidMobile gatherStats]; //TODO: find good location for this
+    });
+    
     
 }
 
@@ -52,6 +57,7 @@ didFailToReceiveAdWithError:(GADRequestError *)error {
         [PrebidMobile adUnitReceivedDefault:(UIView*) adView];
         //[PrebidMobile gatherStats]; //TODO: find good location for this
     }
+    [PrebidMobile markAdUnitLoaded:(UIView*) adView];
 }
 
 /// Tells the delegate that a full-screen view will be presented in response

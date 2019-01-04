@@ -93,6 +93,7 @@ static NSTimeInterval const kDefaultBidExpiryTime = 270;
         _height = height;
         _responseTime = responseTime;
         _cacheId = cacheId;
+        _responseType = 1;
         
         // Setting the default bid expiration time to be 4 minutes 30 seconds
         _timeToExpireAfter = kDefaultBidExpiryTime;

@@ -68,6 +68,7 @@ static int const kBatchCount = 10;
 
 - (void)requestBidsWithAdUnits:(nullable NSArray<PBAdUnit *> *)adUnits
                   withDelegate:(nonnull id<PBBidResponseDelegate>)delegate {
+    
      NSLog(@"%@", @"doing requestBids");
     NSURL *hostUrl = [self urlForHost:_host];
     if (hostUrl == nil) {
@@ -143,29 +144,45 @@ static int const kBatchCount = 10;
                         
                         if(!error) {
                             for (int i = 0; i< bidsArray.count; i++) {
-                                NSMutableDictionary *adServerTargetingCopy = [bidsArray[i][@"ext"][@"prebid"][@"targeting"] mutableCopy];
-                                if (adServerTargetingCopy != nil) {
-                                    if (i == 0) {
-                                        NSString *cacheId = cacheIds[i];
-                                        adServerTargetingCopy[kAPNAdServerCacheIdKey] = cacheId;
+                                
+                                PBBidResponse *bidResponse;
+                                //BOOL t1 = [[bidsArray[i]objectForKey:@"responseType"] isKindOfClass:[NSNumber class]];
+                                    
+                                if([[bidsArray[i]objectForKey:@"responseType"] isKindOfClass:[NSNumber class]] && bidsArray[i][@"responseType"] == @(2)){
+                                    NSDictionary<NSString *,NSString *> *adServerTargetingCopy = [[NSDictionary alloc] init];
+                                    bidResponse = [PBBidResponse bidResponseWithAdUnitId:adUnitId adServerTargeting:adServerTargetingCopy];
+                                    bidResponse.responseTime = [bidsArray[i][@"responsetime"] longValue];
+                                    bidResponse.responseType = 2;
+                                    bidResponse.price = 0;
+                                    bidResponse.bidder = bidsArray[i][@"seat"];
+                                } else {
+                                    NSMutableDictionary *adServerTargetingCopy = [bidsArray[i][@"ext"][@"prebid"][@"targeting"] mutableCopy];
+                                    if (adServerTargetingCopy != nil) {
+                                        if (i == 0) {
+                                            NSString *cacheId = cacheIds[i];
+                                            adServerTargetingCopy[kAPNAdServerCacheIdKey] = cacheId;
+                                        }
+                                        NSString *bidderCacheId = cacheIds[i];
+                                        NSString *cacheIdkey =[ NSString stringWithFormat:@"%@_%@", kAPNAdServerCacheIdKey, bidsArray[i][@"seat"]];
+                                        cacheIdkey = cacheIdkey.length > 20 ? [cacheIdkey substringToIndex:20] : cacheIdkey;
+                                        adServerTargetingCopy[cacheIdkey] = bidderCacheId;
+                                        bidResponse = [PBBidResponse bidResponseWithAdUnitId2:adUnitId
+                                                                            adServerTargeting:adServerTargetingCopy
+                                                                                       bidder:bidsArray[i][@"seat"]
+                                                                                        price:[bidsArray[i][@"price"] doubleValue]
+                                                                                        width:[bidsArray[i][@"w"] longValue]
+                                                                                       height:[bidsArray[i][@"h"] longValue]
+                                                                                 responseTime:[bidsArray[i][@"responsetime"] longValue]
+                                                                                      cacheId:bidderCacheId
+                                                   ];
                                     }
-                                    NSString *bidderCacheId = cacheIds[i];
-                                    NSString *cacheIdkey =[ NSString stringWithFormat:@"%@_%@", kAPNAdServerCacheIdKey, bidsArray[i][@"seat"]];
-                                    cacheIdkey = cacheIdkey.length > 20 ? [cacheIdkey substringToIndex:20] : cacheIdkey;
-                                    adServerTargetingCopy[cacheIdkey] = bidderCacheId;
-                                    PBBidResponse *bidResponse = [PBBidResponse bidResponseWithAdUnitId2:adUnitId
-                                                                                       adServerTargeting:adServerTargetingCopy
-                                                                                                  bidder:bidsArray[i][@"seat"]
-                                                                                                   price:[bidsArray[i][@"price"] doubleValue]
-                                                                                                   width:[bidsArray[i][@"w"] longValue]
-                                                                                                  height:[bidsArray[i][@"h"] longValue]
-                                                                                            responseTime:[bidsArray[i][@"responsetime"] longValue]
-                                                                                                 cacheId:bidderCacheId
-                                                                  ];
                                     PBLogDebug(@"Bid Successful with rounded bid targeting keys are %@ for adUnit id is %@", [bidResponse.customKeywords description], adUnitId);
+                                }
+                                if(bidResponse != nil){
                                     [bidResponsesArray addObject:bidResponse];
                                 }
                             }
+                            
                             [delegate didReceiveSuccessResponse:bidResponsesArray];;
                         } else {
                             [delegate didCompleteWithError:error];

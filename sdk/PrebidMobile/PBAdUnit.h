@@ -56,6 +56,11 @@ typedef NS_ENUM(NSInteger, PBAdUnitType) {
 @property (nonatomic) BOOL isDefault;
 @property (nonatomic) NSString * lineItemId;
 @property (nonatomic) NSString * creativeId;
+@property (nonatomic) long long startLoadTime;
+@property (nonatomic) long long stopLoadTime;
+@property (nonatomic) long timeToLoad;
+@property (nonatomic) UIView * adView;
+
 
 @property (atomic) BOOL isRequesting;
 
