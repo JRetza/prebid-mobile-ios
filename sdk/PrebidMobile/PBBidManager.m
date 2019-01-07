@@ -239,7 +239,7 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     } else {
         //timeoutInMS = timeoutInMS - kPCAttachTopBidTimeoutIntervalMS;
         long long currTime = (long long)([[NSDate date] timeIntervalSince1970] * 1000.0);
-        NSLog(@"calling attachTopBidHelperForAdUnitId %d %d", timeoutInMS,currTime - startInMS);
+        NSLog(@"calling attachTopBidHelperForAdUnitId %d %lld", timeoutInMS,currTime - startInMS);
         //if (timeoutInMS > 0) {
         if(currTime - startInMS<timeoutInMS){
             dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_MSEC * kPCAttachTopBidTimeoutIntervalMS);
