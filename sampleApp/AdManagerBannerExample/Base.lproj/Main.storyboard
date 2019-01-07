@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
-    <device id="retina3_5" orientation="portrait">
+    <device id="retina5_9" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
@@ -18,25 +18,30 @@
                         <viewControllerLayoutGuide type="bottom" id="LF1-Ug-RAX"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jPL-30-0SK" customClass="DFPBannerView">
                                 <rect key="frame" x="10" y="120" width="300" height="250"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="95y-lN-UcE">
-                                <rect key="frame" x="128" y="416" width="46" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <state key="normal" title="Button"/>
+                            <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="95y-lN-UcE">
+                                <rect key="frame" x="152" y="391" width="71" height="30"/>
+                                <fontDescription key="fontDescription" type="system" weight="black" pointSize="15"/>
+                                <state key="normal" title="REFRESH">
+                                    <color key="titleColor" cocoaTouchSystemColor="tableCellGroupedBackgroundColor"/>
+                                </state>
                                 <connections>
                                     <action selector="Button:" destination="BYZ-38-t0r" eventType="touchUpInside" id="ils-7M-0xG"/>
                                 </connections>
                             </button>
                         </subviews>
-                        <color key="backgroundColor" white="0.66666666669999997" alpha="1" colorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="jPL-30-0SK" firstAttribute="top" secondItem="SFb-1a-qlX" secondAttribute="bottom" constant="100" id="AtD-La-iyA"/>
+                            <constraint firstItem="95y-lN-UcE" firstAttribute="top" secondItem="jPL-30-0SK" secondAttribute="bottom" constant="100" id="GiK-N2-NqB"/>
+                            <constraint firstItem="95y-lN-UcE" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="NUe-9c-Jaq"/>
+                            <constraint firstItem="jPL-30-0SK" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="sD1-9j-sWE"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="EA9-PT-ONU"/>
