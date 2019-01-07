@@ -148,7 +148,7 @@ static int const kBatchCount = 10;
                                 PBBidResponse *bidResponse;
                                 //BOOL t1 = [[bidsArray[i]objectForKey:@"responseType"] isKindOfClass:[NSNumber class]];
                                     
-                                if([[bidsArray[i]objectForKey:@"responseType"] isKindOfClass:[NSNumber class]] && bidsArray[i][@"responseType"] == @(2)){
+                                if([[bidsArray[i]objectForKey:@"responseType"] isKindOfClass:[NSNumber class]] && [bidsArray[i][@"responseType"]  isEqual: @(2)]){
                                     NSDictionary<NSString *,NSString *> *adServerTargetingCopy = [[NSDictionary alloc] init];
                                     bidResponse = [PBBidResponse bidResponseWithAdUnitId:adUnitId adServerTargeting:adServerTargetingCopy];
                                     bidResponse.responseTime = [bidsArray[i][@"responsetime"] longValue];
