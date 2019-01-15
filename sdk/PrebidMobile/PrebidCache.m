@@ -154,8 +154,9 @@ static NSString *const kPBAppTransportSecurityAllowsArbitraryLoadsKey = @"NSAllo
     if (self.contents != nil && self.contents.count>0) {
         for (NSString *content in self.contents) {
             NSString *cacheId = [NSString stringWithFormat:@"Prebid_%@_%lld", [NSString stringWithFormat:@"%08X", arc4random()], milliseconds];
-            NSString* setLocalStorageValue = [NSString stringWithFormat:@";localStorage.setItem('%@','%@');", cacheId, content];
-            [webView stringByEvaluatingJavaScriptFromString:setLocalStorageValue];
+            NSString * content2 = [content stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+            NSString* setLocalStorageValue = [NSString stringWithFormat:@";localStorage.setItem('%@','%@');", cacheId, content2];
+            NSString * retval = [webView stringByEvaluatingJavaScriptFromString:setLocalStorageValue];
             [self.cacheIds addObject:cacheId];
             
             /*[webView stringByEvaluatingJavaScriptFromString:setLocalStorageValue completionHandler:^(NSString* result, NSError *error) {

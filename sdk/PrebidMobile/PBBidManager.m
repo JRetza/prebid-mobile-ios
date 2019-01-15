@@ -576,7 +576,7 @@ NSInteger sortBids(PBBidResponse* bidL, PBBidResponse* bidR, void *context){
     
     NSString * adunitId = [adunit.adView valueForKey:@"adUnitID"];
     NSError *error = nil;
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^/\\d+/" options:NSRegularExpressionCaseInsensitive error:&error];
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^/" options:NSRegularExpressionCaseInsensitive error:&error];
     adunitId = [regex stringByReplacingMatchesInString:adunitId options:0 range:NSMakeRange(0, [adunitId length]) withTemplate:@""];
     
     adserverDict[@"name"] = @"DFP";

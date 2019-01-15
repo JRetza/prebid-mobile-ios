@@ -72,7 +72,7 @@ static NSString *const kPrebidMobileVersion = @"0.5.3";
     requestDict[@"ext"] = [self openrtbRequestExtension:accountID];
     
     //requestDict[@"test"] = @(1);
-    // requestDict[@"randomkey"] = @"234124123";
+    //requestDict[@"randomkey"] = @"234124123";
     
     return [requestDict copy];
 }
@@ -119,7 +119,7 @@ static NSString *const kPrebidMobileVersion = @"0.5.3";
             [sizeArray addObject:sizeDict];
         }
         NSDictionary *formats = @{@"format": sizeArray};
-        imp[@"banner"] = formats;
+        //imp[@"banner"] = formats;
         
         if (adUnit.adType == PBAdUnitTypeInterstitial) {
             imp[@"instl"] = @(1);
