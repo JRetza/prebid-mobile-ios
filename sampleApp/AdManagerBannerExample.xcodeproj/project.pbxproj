@@ -262,9 +262,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				"OTHER_LDFLAGS[arch=*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -302,8 +304,10 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				"OTHER_LDFLAGS[sdk=*]" = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -321,10 +325,11 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/AdManagerBannerExample/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "-ObjC";
 				"OTHER_LDFLAGS[arch=*]" = "-ObjC";
+				"OTHER_LDFLAGS[sdk=iphonesimulator*]" = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.adsolutions.example.AdManagerBannerExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -341,10 +346,11 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/AdManagerBannerExample/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "-ObjC";
-				"OTHER_LDFLAGS[arch=*]" = "";
+				"OTHER_LDFLAGS[sdk=*]" = "-ObjC";
+				"OTHER_LDFLAGS[sdk=iphoneos*]" = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.adsolutions.example.AdManagerBannerExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
