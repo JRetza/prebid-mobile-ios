@@ -1,8 +1,8 @@
 [![Build Status](https://api.travis-ci.org/prebid/prebid-mobile-ios.svg?branch=master)](https://travis-ci.org/prebid/prebid-mobile-ios)
 
-# Prebid Mobile iOS SDK
+# Prebid Mobile Adsolutions iOS SDK
 
-Get started with Prebid Mobile by creating a Prebid Server account [here](http://prebid.org/prebid-mobile/prebid-mobile-pbs.html)
+Get started with Prebid Mobile by contacting Adsolutions [here](https://www.adsolutions.com)
 
 ## Use Cocoapods?
 
@@ -12,7 +12,7 @@ Easily include the Prebid Mobile SDK for your primary ad server in your Podfile/
 platform :ios, '8.0'
 
 target 'MyAmazingApp' do 
-    pod 'PrebidMobile'
+    pod 'PrebidMobileAdsolutions', '~> 0.5.7'
 end
 ```
 
