@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
   s.xcconfig = {
 :LIBRARY_SEARCH_PATHS => '$(inherited)',
 :OTHER_CFLAGS => '$(inherited)',
-:OTHER_LDFLAGS => '$(inherited) -ObjC',
+:OTHER_LDFLAGS => '-ObjC',
 :HEADER_SEARCH_PATHS => '$(inherited)',
 :FRAMEWORK_SEARCH_PATHS => '$(inherited)'
 }
