@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "PrebidMobileAdsolutions"
-  s.version      = "0.5.3"
+  s.version      = "0.5.7"
   s.summary      = "PrebidMobile is a lightweight framework that integrates directly with Prebid Server."
 
   s.description  = <<-DESC
@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
   s.xcconfig = {
 :LIBRARY_SEARCH_PATHS => '$(inherited)',
 :OTHER_CFLAGS => '$(inherited)',
-:OTHER_LDFLAGS => '$(inherited)',
+:OTHER_LDFLAGS => '$(inherited) -ObjC',
 :HEADER_SEARCH_PATHS => '$(inherited)',
 :FRAMEWORK_SEARCH_PATHS => '$(inherited)'
 }
